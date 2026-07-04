@@ -1,7 +1,7 @@
 <!-- HEADER -->
 @php
 $authUser = auth()->user();
-$profileRoute = $authUser?->user_type === 'administration' ? route('admin.profile') : route('profile');
+
 $profileInitials = 'U';
 if ($authUser && ! empty($authUser->name)) {
 $nameParts = preg_split('/\s+/', trim($authUser->name));
@@ -122,8 +122,8 @@ $profileInitials = strtoupper(($nameParts[0][0] ?? 'U') . ($nameParts[1][0] ?? '
                         <div class="profile-drop-role">{{ $authUser->email ?? 'no-email@domain.com' }}</div>
                     </div>
                 </div>
-                <a class="profile-drop-item" href="{{ $profileRoute }}"><i class="fa-solid fa-user"></i> My Profile</a>
-                <!-- <a class="profile-drop-item" href="{{ $profileRoute }}"><i class="fa-solid fa-id-card"></i> Account Details</a> -->
+                <a class="profile-drop-item" href="#"><i class="fa-solid fa-file-lines"></i> My Application</a>
+                <!-- <a class="profile-drop-item" href="#"><i class="fa-solid fa-id-card"></i> Account Details</a> -->
                 <a class="profile-drop-item" href="javascript:void(0)" onclick="openPasswordResetModal(event); return false;"><i class="fa-solid fa-lock"></i> Change Password</a>
                 <!-- <a class="profile-drop-item" href="#"><i class="fa-solid fa-gear"></i> Preferences</a> -->
                 <!-- <a class="profile-drop-item" href="#"><i class="fa-solid fa-circle-question"></i> Help & Support</a> -->

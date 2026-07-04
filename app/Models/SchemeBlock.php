@@ -9,6 +9,7 @@ use App\Traits\EncryptedRouteKey;
 class SchemeBlock extends Model
 {
     use SoftDeletes, EncryptedRouteKey;
+    protected $connection = 'adms_jshb';
     protected $table = 'scheme_blocks';
 
     protected $fillable = [

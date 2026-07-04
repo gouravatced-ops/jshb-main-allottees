@@ -9,6 +9,7 @@ use App\Traits\EncryptedRouteKey;
 class SchemeUnitQuota extends Model
 {
     use SoftDeletes, EncryptedRouteKey;
+    protected $connection = 'adms_jshb';
     protected $table = 'scheme_unit_quotas';
 
     public $timestamps = true;

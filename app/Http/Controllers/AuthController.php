@@ -238,25 +238,6 @@ class AuthController extends Controller
 
     private function dashboardRoute(User $user): string
     {
-        return match ($user->roleRelation->slug) {
-
-            'admin',
-            'super-admin' => 'admin.dashboard',
-            'division-officer' => 'division.dashboard',
-
-            'executive-engineer',
-            'dealing-assistant',
-            'office-superintendent',
-            'estate-officer',
-            'assistant-engineer',
-            'junior-engineer' => 'engineer.dashboard',
-
-            'managing-director' => 'managing.dashboard',
-
-            'operator' => 'operator.dashboard',
-
-            'allottee' => 'dashboard',
-            default => 'staff.dashboard',
-        };
+        return 'dashboard';
     }
 }

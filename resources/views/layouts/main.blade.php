@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{{ asset('css/icons/all.css') }}">
     <link rel="stylesheet" href="{{ asset('css/font.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/allottee/dashboard.css') }}">
 </head>
 
 <body>

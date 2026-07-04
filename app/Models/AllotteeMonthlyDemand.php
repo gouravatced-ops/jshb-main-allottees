@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class AllotteeMonthlyDemand extends Model
 {
     use HasFactory;
-    protected $connection = 'adms_allottees';
 
     protected $table = 'allottee_emi_demands';
 

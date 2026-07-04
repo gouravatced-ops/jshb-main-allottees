@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class AllotteePropertyFinDetail extends Model
 {
     use HasFactory;
-    protected $connection = 'adms_allottees';
     protected $table = 'allottee_property_fin_details';
 
     protected $fillable = [

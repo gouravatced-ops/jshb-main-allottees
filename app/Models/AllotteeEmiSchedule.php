@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class AllotteeEmiSchedule extends Model
 {
     use HasFactory;
-    protected $connection = 'adms_allottees';
 
     protected $table = 'allottee_emi_schedules';
 

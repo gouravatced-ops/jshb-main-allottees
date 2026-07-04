@@ -10,6 +10,7 @@ use App\Traits\EncryptedRouteKey;
 class QuarterType extends Model
 {
     use HasFactory, SoftDeletes, EncryptedRouteKey;
+    protected $connection = 'adms_jshb';
 
     /**
      * The table associated with the model.

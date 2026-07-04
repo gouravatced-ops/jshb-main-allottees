@@ -73,7 +73,7 @@
 
 body {
     font-family: var(--font-main);
-    background: #e1e1dc;
+    background: #f5f4f2;
     color: var(--text-dark);
     min-height: 100vh;
     overflow-x: hidden;
@@ -1013,7 +1013,7 @@ a {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 14px;
+    padding: 4px 14px;
     border-radius: 0;
     color: #f2f5f8;
     font-size: 15px;

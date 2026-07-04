@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class AllotteeSiteVerification extends Model
 {
     use HasFactory;
-    protected $connection = 'adms_allottees';
 
     protected $guarded = [];
 

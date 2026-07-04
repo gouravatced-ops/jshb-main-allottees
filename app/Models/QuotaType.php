@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class QuotaType extends Model
 {   
     use HasFactory;
+    protected $connection = 'adms_jshb';
     protected $table = 'quota_types';
     public $timestamps = false;
 

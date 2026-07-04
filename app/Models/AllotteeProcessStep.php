@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class AllotteeProcessStep extends Model
 {
     use HasFactory;
-    protected $connection = 'adms_allottees';
     protected $table = 'allottee_process_steps';
     
     // STATUS
@@ -22,6 +21,7 @@ class AllotteeProcessStep extends Model
         'icons',
         'menu_key',
         'sub_menu_key',
+        'route_name',
         'process_group',
         'step_no',
         'title',

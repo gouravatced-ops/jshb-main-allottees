@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Role extends Model
 {
     use SoftDeletes;
+    protected $connection = 'adms_jshb';
 
     protected $fillable = [
         'name',

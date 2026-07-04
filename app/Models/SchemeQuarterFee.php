@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SchemeQuarterFee extends Model
 {
     use HasFactory;
+    protected $connection = 'adms_jshb';
     protected $table = 'scheme_quarter_fees';
 
     public $timestamps = true;

@@ -2,17 +2,19 @@ const togglePassword = document.getElementById("togglePassword");
 const password = document.getElementById("password");
 const passwordcnfirm = document.getElementById("password_confirmation");
 
-togglePassword.addEventListener("click", function () {
-    const type = password.getAttribute("type") === "password" ? "text" : "password";
-    password.setAttribute("type", type);
-    if(passwordcnfirm){
-        passwordcnfirm.setAttribute("type", type);
-    }
+if (togglePassword) {
+    togglePassword.addEventListener("click", function () {
+        const type = password.getAttribute("type") === "password" ? "text" : "password";
+        password.setAttribute("type", type);
+        if(passwordcnfirm){
+            passwordcnfirm.setAttribute("type", type);
+        }
 
-    // Toggle icon
-    this.classList.toggle("fa-eye");
-    this.classList.toggle("fa-eye-slash");
-});
+        // Toggle icon
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+    });
+}
 
 (function () {
     // CAPTCHA GENERATOR (fully functional)

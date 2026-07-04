@@ -11,9 +11,16 @@ use App\Models\PostType;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ProcessStepService;
 
 class DashboardController extends Controller
 {
+    protected $processStepService;
+
+    public function __construct(ProcessStepService $processStepService)
+    {
+        $this->processStepService = $processStepService;
+    }
     public function index(Request $request)
     {
         if ($this->checkSessionExpiry($request)) {
@@ -30,217 +37,72 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
+        $allottee = \App\Models\Allottee::with([
+            'alloteeAdresses',
+            'nomineesBank',
+            'documentData',
+            'generatedDocument',
+            'emiAccount',
+            'emiDemand',
+            'emiSchedule',
+            'accountLedger',
+            'allotteeOrders',
+            'allotteeTransaction',
+            'processSteps',
+            'siteVerification',
+            'allotProFinDetail',
+            'scheme',
+            'propertyCategory',
+            'propertyType',
+            'quarterType'
+        ])->where('user_id', $user->id)->first();
 
-        $recentLogins = $user->loginLogs()->latest()->take(5)->get();
-        $otpLogCount = $user->otpLogs()->count();
+        $latestLogin = $user->loginLogs()->latest()->first();
 
-        return view('user.dashboard', compact('user', 'recentLogins', 'otpLogCount'));
+        // Ensure process steps exist for this allottee
+        $this->processStepService->ensureProcessSteps($allottee);
+        
+        $steps = $allottee->processSteps()->orderBy('step_no')->get();
+        
+        $blade = 'allottee-dashboard';
+        $step = null;
+        
+
+        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step'));
     }
 
-    public function admin(Request $request)
+    public function section(Request $request, $blade)
     {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
         $user = Auth::user();
+        $allottee = \App\Models\Allottee::with([
+            'alloteeAdresses',
+            'nomineesBank',
+            'documentData',
+            'generatedDocument',
+            'emiAccount',
+            'emiDemand',
+            'emiSchedule',
+            'accountLedger',
+            'allotteeOrders',
+            'allotteeTransaction',
+            'processSteps',
+            'siteVerification',
+            'allotProFinDetail',
+            'scheme',
+            'propertyCategory',
+            'propertyType',
+            'quarterType'
+        ])->where('user_id', $user->id)->firstOrFail();
 
-        if (! $user || $user->role !== 'admin') {
-            return redirect()->route('dashboard')->with('error', 'Admin access required.');
-        }
+        $latestLogin = $user->loginLogs()->latest()->first();
+        
+        $this->processStepService->ensureProcessSteps($allottee);
+        $steps = $allottee->processSteps()->orderBy('step_no')->get();
+        
+        // Find the step corresponding to this blade
+        $step = $steps->firstWhere('blade', $blade);
 
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();
-        $latestLogin = $loginLogs->first();
-
-        return view('admin.module.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
-    }
-
-    public function staff(Request $request)
-    {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
-        $user = Auth::user();
-
-        if (! $user || $user->role !== 'staff') {
-            return redirect()->route('dashboard')->with('error', 'Staff access required.');
-        }
-
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();    
-        $latestLogin = $loginLogs->first();
-
-        return view('staff.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
-    }
-
-    public function division(Request $request)
-    {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
-        $user = Auth::user();
-
-        if (! $user || $user->role !== 'division') {
-            return redirect()->route('dashboard')->with('error', 'Division access required.');
-        }
-
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();    
-        $latestLogin = $loginLogs->first();
-
-        return view('division.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
-    }
-
-    public function subdivision(Request $request)
-    {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
-        $user = Auth::user();
-
-        if (! $user || $user->role !== 'subdivision') {
-            return redirect()->route('dashboard')->with('error', 'Sub Division access required.');
-        }
-
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();    
-        $latestLogin = $loginLogs->first();
-
-        return view('subdivision.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
-    }
-
-    public function engineer(Request $request)
-    {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
-        $user = Auth::user();
-
-        if (! $user || $user->role !== 'engineer') {
-            return redirect()->route('dashboard')->with('error', 'Engineer access required.');
-        }
-
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();    
-        $latestLogin = $loginLogs->first();
-
-        return view('engineer.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
-    }
-
-    public function managing(Request $request)
-    {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
-        $user = Auth::user();
-
-        if (! $user || $user->role !== 'managing') {
-            return redirect()->route('dashboard')->with('error', 'Managing Director access required.');
-        }
-
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();    
-        $latestLogin = $loginLogs->first();
-
-        return view('managing.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
-    }
-
-    public function operator(Request $request)
-    {
-        if ($this->checkSessionExpiry($request)) {
-            return redirect()->route('login')->with('error', 'Your session expired after 60 minutes.');
-        }
-
-        if ($redirect = $this->redirectIfLocked()) {
-            return $redirect;
-        }
-
-        $user = Auth::user();
-
-        if (! $user || $user->role !== 'operator') {
-            return redirect()->route('dashboard')->with('error', 'Operator access required.');
-        }
-
-        $users = User::with('detail')->orderByDesc('created_at')->get();
-        $loginLogs = LoginLog::latest()->take(10)->get();
-        $otpLogs = OtpLog::latest()->take(10)->get();    
-        $latestLogin = $loginLogs->first();
-
-        return view('operator.dashboard', compact(
-            'users',
-            'loginLogs',
-            'otpLogs',
-            'latestLogin',
-        ));
+        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step'));
     }
 
 

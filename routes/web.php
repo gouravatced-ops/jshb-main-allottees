@@ -39,13 +39,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/scheme-list', [CommonController::class, 'getSchemeList']);
     Route::get('/get-scheme-details/{id}',[CommonController::class, 'getSchemeDetails']
 );
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/{blade}', [\App\Http\Controllers\DashboardController::class, 'section'])->name('dashboard.section');
 });
-
-require __DIR__ . '/user-routes.php';
-require __DIR__ . '/admin-routes.php';
-require __DIR__ . '/staff-routes.php';
-require __DIR__ . '/division-routes.php';
-require __DIR__ . '/subdivision-routes.php';
-require __DIR__ . '/engineer-routes.php';
-require __DIR__ . '/managing-routes.php';
-require __DIR__ . '/operator-routes.php';

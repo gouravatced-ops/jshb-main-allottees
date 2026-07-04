@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class AllotteeStepDuration extends Model
 {
     use HasFactory;
-    protected $connection = 'adms_allottees';
     protected $table = 'allottee_step_durations';
 
     protected $fillable = [

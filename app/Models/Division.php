@@ -9,7 +9,8 @@ use App\Traits\EncryptedRouteKey;
 class Division extends Model
 {
     use SoftDeletes, EncryptedRouteKey;
-
+    
+    protected $connection = 'adms_jshb';
     protected $fillable = [
         'name',
         'division_code',

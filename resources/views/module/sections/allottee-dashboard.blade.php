@@ -1,0 +1,354 @@
+<div id="page-dashboard" class="admin-dashboard-page">
+
+    @if(!$allottee)
+        <div class="alert alert-warning">
+            <h4>No Allottee Record Found</h4>
+            <p>Your user account is not currently linked to an active allottee profile.</p>
+        </div>
+    @else
+        <!-- Hero Section -->
+        <div class="dashboard-hero-card" style="background: linear-gradient(135deg, #0d6e55, #0a3d31); border-radius: 8px; padding: 20px; color: white; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
+                <div>
+                    <div style="color: #facc15; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                        Application #{{ $allottee->application_no ?? 'N/A' }}
+                    </div>
+                    <h2 style="font-weight: 700; margin-bottom: 10px; font-size: 28px;">
+                        Welcome back, {{ trim(($allottee->prefix ?? '') . ' ' . ($allottee->allottee_name ?? '') . ' ' . ($allottee->allottee_surname ?? '')) }}
+                    </h2>
+                    <p style="margin: 0; opacity: 0.9; font-size: 15px; max-width: 600px;">
+                        <i class="fa-solid fa-map-pin me-1"></i> {{ $allottee->propertyCategory->name ?? 'Category' }} - {{ $allottee->propertyType->name ?? 'Property' }} ({{ $allottee->quarterType->quarter_name ?? 'Type' }}) <br>
+                        <i class="fa-solid fa-layer-group me-1 mt-2"></i> {{ $allottee->scheme->scheme_name ?? 'Scheme Not Assigned' }}
+                    </p>
+                </div>
+                
+                <div class="text-md-end text-start p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+                    <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase;">Payment Mode</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #fff;">
+                        @if($allottee->payment_option == 'emi')
+                            <i class="fa-solid fa-calendar-days me-2"></i> EMI / Installments
+                        @elseif($allottee->payment_option == 'one_time')
+                            <i class="fa-solid fa-money-check-dollar me-2"></i> One-Time Payment
+                        @else
+                            <i class="fa-solid fa-circle-question me-2"></i> Pending Choice
+                        @endif
+                    </div>
+                    <div class="badge bg-success mt-2" style="font-size: 12px; padding: 5px 10px;">Active Allottee</div>
+                </div>
+            </div>
+        </div>
+
+        @php
+            $totalPaid = $allottee->allotteeTransaction()->where('payment_status', 'success')->sum('amount') ?? 0;
+            $outstandingDemand = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->sum('outstanding_amount') ?? 0;
+            $totalDocuments = $allottee->documentData()->count() + $allottee->generatedDocument()->count();
+            
+            $nextEmi = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->orderBy('due_date', 'asc')->first();
+            $completedStepsCount = $allottee->processSteps()->where('status', 'completed')->count();
+            $totalStepsCount = $allottee->processSteps()->count();
+            $progressPercent = $totalStepsCount > 0 ? round(($completedStepsCount / $totalStepsCount) * 100) : 0;
+            
+            $contact = $allottee->alloteeAdresses; // relation from model
+            $mobile = $contact->mobile_number ?? 'Not Provided';
+            $email = $contact->email ?? 'Not Provided';
+            $district = $contact->present_district ?? $contact->permanent_district ?? '-';
+            $post_office = $contact->present_post_office ?? $contact->permanent_post_office ?? '-';
+        @endphp
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <!-- Total Paid -->
+            <div class="col-xl-3 col-lg-6">
+                <div class="card h-100 border-0" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(13, 110, 85, 0.1); color: #0d6e55;">
+                            <i class="fa-solid fa-wallet fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Total Amount Paid</div>
+                            <h3 class="mb-0 fw-bold" style="color: #0f1f1a;">₹ {{ number_format($totalPaid, 2) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Outstanding -->
+            <div class="col-xl-3 col-lg-6">
+                <div class="card h-100 border-0" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(220, 38, 38, 0.1); color: #dc2626;">
+                            <i class="fa-solid fa-file-invoice-dollar fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Current Outstanding</div>
+                            <h3 class="mb-0 fw-bold" style="color: #dc2626;">₹ {{ number_format($outstandingDemand, 2) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="col-xl-3 col-lg-6">
+                <div class="card h-100 border-0" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                            <i class="fa-solid fa-file-shield fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Documents</div>
+                            <h3 class="mb-0 fw-bold" style="color: #0f1f1a;">{{ $totalDocuments }} <span class="fs-6 text-muted fw-normal">Files</span></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Status -->
+            <div class="col-xl-3 col-lg-6">
+                <div class="card h-100 border-0" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="text-muted small fw-bold text-uppercase">Process Completion</div>
+                            <div class="badge bg-primary rounded-pill">{{ $progressPercent }}%</div>
+                        </div>
+                        <div class="progress mt-3" style="height: 10px; border-radius: 10px;">
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ $progressPercent }}%"></div>
+                        </div>
+                        <div class="mt-2 text-muted small">{{ $completedStepsCount }} of {{ $totalStepsCount }} steps completed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Details Column -->
+            <div class="col-lg-8">
+                <!-- Recent Transactions -->
+                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                    <div class="card-body p-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-receipt text-muted me-2"></i>Recent Transactions</h6>
+                            <button class="btn btn-sm btn-outline-secondary py-0" onclick="App.loadStep(7, null)" style="font-size: 12px;">View All</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        @if($allottee->allotteeTransaction && $allottee->allotteeTransaction->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="text-muted" style="font-size: 13px;">
+                                        <tr>
+                                            <th>Transaction ID</th>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th class="text-end">Amount</th>
+                                            <th class="text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($allottee->allotteeTransaction->sortByDesc('paid_at')->take(5) as $trx)
+                                            <tr>
+                                                <td class="fw-medium font-monospace small">{{ $trx->transaction_no ?? '-' }}</td>
+                                                <td>{{ $trx->paid_at ? \Carbon\Carbon::parse($trx->paid_at)->format('d M Y') : '-' }}</td>
+                                                <td>
+                                                    @if($trx->transaction_type == 'emi')
+                                                        <span class="badge bg-light text-dark border">EMI</span>
+                                                    @else
+                                                        <span class="badge bg-light text-dark border">{{ ucfirst($trx->transaction_type) }}</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end fw-bold">₹ {{ number_format($trx->amount, 2) }}</td>
+                                                <td class="text-center">
+                                                    @if(strtolower($trx->payment_status) == 'success')
+                                                        <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-check-circle me-1"></i> Success</span>
+                                                    @elseif(strtolower($trx->payment_status) == 'failed')
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-times-circle me-1"></i> Failed</span>
+                                                    @else
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-clock me-1"></i> Pending</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center text-muted p-4">
+                                <div class="fs-1 mb-3 opacity-25"><i class="fa-solid fa-receipt"></i></div>
+                                <h6>No transactions found</h6>
+                                <p class="small mb-0">You have not made any payments yet.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Notices -->
+                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                    <div class="card-body p-0">
+                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-bullhorn text-warning me-2"></i>Notices & Announcements</h6>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item p-4 border-bottom">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold text-dark">Extension of EMI Payment Deadline</h6>
+                                    <small class="text-muted">3 days ago</small>
+                                </div>
+                                <p class="mb-0 text-muted small">The board has decided to extend the deadline for the current month's EMI payment without any late fees until the 15th of the month.</p>
+                            </div>
+                            <div class="list-group-item p-4">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold text-dark">Property Registration Camp</h6>
+                                    <small class="text-muted">1 week ago</small>
+                                </div>
+                                <p class="mb-0 text-muted small">A special camp for property registration will be held at the regional office. All allottees who have completed 100% payment are requested to attend with original documents.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar / Extra Details -->
+            <div class="col-lg-4">
+                
+                <!-- Upcoming Demand -->
+                @if($nextEmi)
+                <div class="card border-0 bg-danger bg-opacity-10 mb-4" style="border-radius: 12px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fa-solid fa-triangle-exclamation text-danger fs-4 me-2"></i>
+                            <h5 class="mb-0 fw-bold text-danger">Payment Due!</h5>
+                        </div>
+                        <p class="text-danger opacity-75 mb-1 small">You have an upcoming or overdue payment.</p>
+                        <h2 class="text-danger fw-bold mb-3">₹ {{ number_format($nextEmi->outstanding_amount ?? $nextEmi->total_demand_amount, 2) }}</h2>
+                        
+                        <div class="d-flex justify-content-between small text-danger fw-medium mb-3">
+                            <span>Due Date:</span>
+                            <span>{{ $nextEmi->due_date ? \Carbon\Carbon::parse($nextEmi->due_date)->format('d M Y') : 'N/A' }}</span>
+                        </div>
+                        
+                        <button class="btn btn-danger w-100 fw-bold" onclick="App.loadStep(8, null)">Pay Now</button>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Contact & Bank Info -->
+                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                    <div class="card-body p-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-address-card text-muted me-2"></i>Contact Details</h6>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fa-solid fa-phone text-muted mt-1 me-3"></i>
+                                <div>
+                                    <div class="fw-bold">{{ $mobile }}</div>
+                                    <div class="text-muted" style="font-size: 11px;">Primary Phone</div>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="fa-solid fa-envelope text-muted mt-1 me-3"></i>
+                                <div>
+                                    <div class="fw-bold">{{ $email }}</div>
+                                    <div class="text-muted" style="font-size: 11px;">Email Address</div>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-start">
+                                <i class="fa-solid fa-location-dot text-muted mt-1 me-3"></i>
+                                <div>
+                                    <div class="fw-bold text-truncate" style="max-width: 200px;" title="{{ $post_office }}, {{ $district }}">
+                                        {{ $post_office }}, {{ $district }}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 11px;">Communication Address</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Calendar -->
+                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                    <div class="card-body p-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-regular fa-calendar-alt text-muted me-2"></i>Calendar</h6>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="text-center" id="calendarWidget">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button class="btn btn-sm btn-light py-0 px-2" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left" style="font-size: 10px;"></i></button>
+                                <span class="fw-bold text-dark" id="calendarMonthYear"></span>
+                                <button class="btn btn-sm btn-light py-0 px-2" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i></button>
+                            </div>
+                            <div class="row g-1 text-center small fw-bold text-muted mb-2" style="font-size: 12px;">
+                                <div class="col">Su</div><div class="col">Mo</div><div class="col">Tu</div>
+                                <div class="col">We</div><div class="col">Th</div><div class="col">Fr</div><div class="col">Sa</div>
+                            </div>
+                            <div id="calendarDays">
+                                <!-- Dynamically populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    @endif
+</div>
+
+<script>
+    let currentDate = new Date();
+    
+    function renderCalendar() {
+        const monthYearStr = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const calendarMonthYear = document.getElementById('calendarMonthYear');
+        if (calendarMonthYear) calendarMonthYear.innerText = monthYearStr;
+        
+        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === currentDate.getFullYear() && today.getMonth() === currentDate.getMonth();
+        
+        let html = '<div class="row g-1 text-center small">';
+        for (let i = 0; i < firstDay; i++) {
+            html += '<div class="col"><div class="p-1 text-muted opacity-25">-</div></div>';
+        }
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday = isCurrentMonth && day === today.getDate();
+            const classes = isToday ? 'bg-primary text-white fw-bold shadow-sm' : 'text-dark hover-bg-light';
+            const cursor = isToday ? 'cursor: pointer;' : 'cursor: pointer; transition: background 0.2s;';
+            
+            html += `
+                <div class="col">
+                    <div class="p-1 rounded ${classes}" style="${cursor}" onmouseover="if(!this.classList.contains('bg-primary')) this.style.backgroundColor='#f8f9fa'" onmouseout="if(!this.classList.contains('bg-primary')) this.style.backgroundColor='transparent'">${day}</div>
+                </div>
+            `;
+            
+            if ((day + firstDay) % 7 === 0) {
+                html += '</div><div class="row g-1 text-center small mt-1">';
+            }
+        }
+        html += '</div>';
+        
+        const calendarDays = document.getElementById('calendarDays');
+        if (calendarDays) calendarDays.innerHTML = html;
+    }
+    
+    function changeMonth(offset) {
+        currentDate.setMonth(currentDate.getMonth() + offset);
+        renderCalendar();
+    }
+    
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCalendar();
+    });
+    // Fallback for SPA/dynamic loads
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(renderCalendar, 100);
+    }
+</script>
+0
