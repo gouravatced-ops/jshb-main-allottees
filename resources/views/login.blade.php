@@ -27,6 +27,9 @@
                     </div>
                 </div>
                 <div class="ref-header-right">
+                    @if(config('panel.govermentLogo'))
+                        <img src="{{ asset(config('panel.govermentLogo')) }}" alt="State Government Logo" style="height: 60px; margin-right: 15px;" onerror="this.style.display='none'">
+                    @endif
                     <div class="ref-portal-badge">
                         <i class="fa-solid fa-desktop"></i> Member Portal
                     </div>
@@ -41,16 +44,12 @@
                         <li>पासवर्ड न होने की स्थिति में "Forgot password?" लिंक का प्रयोग करें।</li>
                         <li>आवंटी पोर्टल अंतर्गत आप भवन का आवंटन आदेश, लेजर, एवं स्वयं का प्रोफाइल भी अपडेट करने की सुविधा दी जा रही है।</li>
                         <li>आवंटी पोर्टल अंतर्गत किश्तों का भुगतान ऑनलाइन किये जाने हेतु सुविधा दी गयी है।</li>
-                        <li>आवंटी पोर्टल अंतर्गत रखरखाव शुल्क (LMC, CMC, WATER CHARGE) का भुगतान ऑनलाइन किये जाने हेतु सुविधा दी गयी है।</li>
-                        <li>आवंटी पोर्टल अंतर्गत आप निम्नलिखित सेवाएं हेतु आवेदन कर सकते है :-
-                            <ul>
-                                <li>विक्रय अनापत्ति (SALE NOC)</li>
-                                <li>त्रिपक्षीय अनुबंध (TRI PARTY AGREEMENT)</li>
-                                <li>उपहार विल्लेख (GIFT DEED NOC)</li>
-                                <li>बंधक अनापत्ति प्रमाण पत्र (MORTGAGE NOC)</li>
-                            </ul>
-                        </li>
-                        <li>उक्त सेवाएं प्राप्त करने हेतु कृपया मंडल में आपके लंबित रखरखाव शुल्क का भुगतान करना सुनिश्चित करें।</li>
+                        <li>आवंटन पत्र (Allotment Letter) के लिए आवेदन एवं डाउनलोड कर सकते हैं।</li>
+                        <li>एग्रीमेंट (Agreement) हेतु आवेदन, दस्तावेज़ अपलोड एवं डाउनलोड कर सकते हैं।</li>
+                        <li>कब्ज़ा पत्र (Possession Letter) हेतु आवेदन कर सकते हैं।</li>
+                        <li>आवेदन कर उसकी प्रगति (Application Status) देख सकते हैं।</li>
+                        <li>आवश्यक दस्तावेज़ अपलोड एवं डाउनलोड कर सकते हैं।</li>
+                        <li>बोर्ड द्वारा जारी नोटिस एवं सूचनाएँ प्राप्त कर सकते हैं।</li>
                     </ul>
                 </div>
                 
@@ -90,12 +89,17 @@
                         </div>
 
                         <div class="ref-input-group">
-                            <label for="captcha_input">कैप्चा डाले</label>
-                            <div class="ref-captcha-row">
-                                <div id="captchaCode" class="ref-captcha-box">JH42K</div>
-                                <button type="button" class="ref-captcha-refresh" id="refreshCaptcha" title="Refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
+                            <label for="captcha">कैप्चा डाले</label>
+                            <div class="ref-captcha-row" style="margin-bottom: 5px;">
+                                <div class="ref-captcha-box" style="padding: 0; border: none; background: transparent;">
+                                    <img src="{{ captcha_src('flat') }}" onclick="this.src='{{ captcha_src('flat') }}'+Math.random()" alt="captcha" id="captcha-img" style="cursor: pointer; height: 42px; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                                </div>
+                                <button type="button" class="ref-captcha-refresh" onclick="document.getElementById('captcha-img').src='{{ captcha_src('flat') }}'+Math.random()" title="Refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
                             </div>
-                            <input id="captcha_input" name="captcha_input" type="text" placeholder="कैप्चा डाले" autocomplete="off" required>
+                            <input id="captcha" name="captcha" type="text" placeholder="कैप्चा डाले" autocomplete="off" required>
+                            @error('captcha')
+                                <span style="color: #b91c1c; font-size: 0.85rem; margin-top: 5px; display: block;"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
+                            @enderror
                         </div>
                         @endif
 
@@ -108,12 +112,11 @@
 
                         <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9rem;">
                             <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" name="remember"> Remember me
                             </label>
                             <a href="{{ route('password.request') }}" style="color: #1e3a8a; text-decoration: none; font-weight: bold;">Forgot password?</a>
                         </div>
 
-                        <button type="submit" class="ref-login-btn" id="loginBtn" @if(! $otpRequired) disabled @endif>
+                        <button type="submit" class="ref-login-btn" id="loginBtn">
                             {{ $otpRequired ? 'Verify & Login' : 'लॉग इन करें' }}
                         </button>
                     </form>
@@ -123,8 +126,12 @@
     </div>
 
     <div class="maroon-footer">
-        <div>Site is designed & hosted by National Informatics Centre © Jharkhand Housing Board.</div>
+        <div>Site is designed by <a href="https://www.computered.in/" target="_blank" style="text-decoration: none; color:white;">Computer Ed.</a> © {{ config('panel.organization') }}.</div>
         <div class="maroon-footer-social">
+            Tech Partner
+            <a href="https://www.computered.in/" target="_blank" rel="noopener noreferrer" class="partner-badge">
+              <img src="{{ asset(config('panel.techpatrnterLogo')) }}" width="20px" alt="Computer Ed">
+            </a> | 
             <i class="fa-brands fa-facebook-f"></i>
             <i class="fa-brands fa-youtube"></i>
             <i class="fa-brands fa-x-twitter"></i>

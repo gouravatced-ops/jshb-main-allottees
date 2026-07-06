@@ -64,6 +64,10 @@ class User extends Authenticatable
         'is_locked',
         'status',
         'secure_pin',
+        'otp_login_valid_until',
+        'failed_login_attempts',
+        'account_blocked_until',
+        'has_been_blocked_once',
     ];
 
     /**
@@ -92,6 +96,10 @@ class User extends Authenticatable
             'status' => 'boolean',
             'password' => 'hashed',
             'secure_pin' => 'hashed',
+            'otp_login_valid_until' => 'datetime',
+            'account_blocked_until' => 'datetime',
+            'has_been_blocked_once' => 'boolean',
+            'failed_login_attempts' => 'integer',
         ];
     }
 

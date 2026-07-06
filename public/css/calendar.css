@@ -1,0 +1,153 @@
+.calendar-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    padding: 1.2rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
+    /* margin-bottom: 1.5rem; */
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.calendar-header h2 {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1a2639;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+}
+
+.calendar-header h2 i {
+    color: #2b5b9e;
+    font-size: 1rem;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.nav-buttons button {
+    background: #f1f5f9;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #1e2b41;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.nav-buttons button:hover {
+    background: #e2e8f0;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.day-cell {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #1f2a3e;
+    transition: all 0.12s ease;
+    position: relative;
+    cursor: default;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.day-cell:first-child {
+    border-top-left-radius: 8px;
+}
+.day-cell:nth-child(7) {
+    border-top-right-radius: 8px;
+}
+.day-cell:nth-last-child(7) {
+    border-bottom-left-radius: 8px;
+}
+.day-cell:last-child {
+    border-bottom-right-radius: 8px;
+}
+
+.day-cell.empty {
+    color: #cbd5e1;
+    pointer-events: none;
+}
+
+.day-cell.today {
+    background: #eaf0fc;
+    border: 1px solid #1f4e8c !important; /* Ensure border shows */
+    color: #1f4e8c;
+    font-weight: 700;
+    box-shadow: inset 0 0 0 1px #1f4e8c; /* Gives a thicker border appearance without breaking grid */
+}
+
+.day-cell.holiday {
+    font-weight: 600;
+    color: #1a1a2a;
+}
+
+.day-cell.holiday:hover {
+    z-index: 10;
+    background-color: #f1f5f9 !important; /* Lighter/darker background on hover */
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.08); /* Inner shadow instead of pop out */
+}
+
+.day-cell.holiday::after {
+    content: attr(data-holiday);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: rgba(11, 26, 43, 0.95);
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.12s ease;
+    z-index: 20;
+}
+
+.day-cell.holiday:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+.day-cell:not(.empty):not(.holiday):not(.today):hover {
+    background: #800000 !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
+}

@@ -27,6 +27,9 @@
                     </div>
                 </div>
                 <div class="ref-header-right">
+                    @if(config('panel.govermentLogo'))
+                        <img src="{{ asset(config('panel.govermentLogo')) }}" alt="State Government Logo" style="height: 60px; margin-right: 15px;" onerror="this.style.display='none'">
+                    @endif
                     <div class="ref-portal-badge">
                         <i class="fa-solid fa-desktop"></i> Member Portal
                     </div>
@@ -37,7 +40,7 @@
                 <div class="ref-content-left">
                     <h3>पासवर्ड रीसेट करने की प्रक्रिया</h3>
                     <ul>
-                        <li>अपना सत्यापित (verified) ईमेल दर्ज करें और सुरक्षा कैप्चा भरें, फिर आपको अपने ईमेल पर एक लिंक / ओ.टी.पी. प्राप्त होगा।</li>
+                        <li>अपना सत्यापित (verified) ईमेल दर्ज करें और सुरक्षा कैप्चा भरें, फिर आपको अपने ईमेल पर एक ओ.टी.पी. प्राप्त होगा।</li>
                         <li>प्राप्त लिंक / ओ.टी.पी. के माध्यम से अपना नया पासवर्ड (new password) और पुष्टि पासवर्ड (confirm password) दर्ज करें, और कैप्चा के साथ सेव करें।</li>
                         <li>पासवर्ड सफलतापूर्वक सेव होने के बाद, कृपया अपने नए पासवर्ड के साथ पोर्टल पर फिर से लॉग इन करें।</li>
                     </ul>
@@ -79,16 +82,21 @@
                         @endif
 
                         <div class="ref-input-group">
-                            <label for="captcha_input">कैप्चा डालें</label>
-                            <div class="ref-captcha-row">
-                                <div id="captchaCode" class="ref-captcha-box">JH42K</div>
-                                <button type="button" class="ref-captcha-refresh" id="refreshCaptcha" title="Refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
+                            <label for="captcha">कैप्चा डालें</label>
+                            <div class="ref-captcha-row" style="margin-bottom: 5px;">
+                                <div class="ref-captcha-box" style="padding: 0; border: none; background: transparent;">
+                                    <img src="{{ captcha_src('flat') }}" onclick="this.src='{{ captcha_src('flat') }}'+Math.random()" alt="captcha" id="captcha-img-fp" style="cursor: pointer; height: 42px; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                                </div>
+                                <button type="button" class="ref-captcha-refresh" onclick="document.getElementById('captcha-img-fp').src='{{ captcha_src('flat') }}'+Math.random()" title="Refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
                             </div>
-                            <input id="captcha_input" name="captcha_input" type="text" placeholder="कैप्चा डालें" autocomplete="off" required>
+                            <input id="captcha" name="captcha" type="text" placeholder="कैप्चा डालें" autocomplete="off" required>
+                            @error('captcha')
+                                <span style="color: #b91c1c; font-size: 0.85rem; margin-top: 5px; display: block;"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
+                            @enderror
                         </div>
 
-                        <button type="submit" class="ref-login-btn" id="loginBtn" disabled>
-                            {{ $otpRequired ? 'सत्यापित करें' : 'ओ.टी.पी. / लिंक प्राप्त करें' }}
+                        <button type="submit" class="ref-login-btn" id="loginBtn">
+                            {{ $otpRequired ? 'सत्यापित करें' : 'ओ.टी.पी. करें' }}
                         </button>
                     </form>
 
@@ -103,8 +111,12 @@
     </div>
 
     <div class="maroon-footer">
-        <div>Site is designed & hosted by National Informatics Centre © Jharkhand Housing Board.</div>
+        <div>Site is designed by <a href="https://www.computered.in/" target="_blank" style="text-decoration: none; color:white;">Computer Ed.</a> © {{ config('panel.organization') }}.</div>
         <div class="maroon-footer-social">
+            Tech Partner
+            <a href="https://www.computered.in/" target="_blank" rel="noopener noreferrer" class="partner-badge">
+              <img src="{{ asset(config('panel.techpatrnterLogo')) }}" width="20px" alt="Computer Ed">
+            </a> | 
             <i class="fa-brands fa-facebook-f"></i>
             <i class="fa-brands fa-youtube"></i>
             <i class="fa-brands fa-x-twitter"></i>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OtpLog;
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -11,6 +12,13 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class ForgotPasswordController extends Controller
 {
+    protected OtpService $otpService;
+
+    public function __construct(OtpService $otpService)
+    {
+        $this->otpService = $otpService;
+    }
+
     public function showLinkRequestForm()
     {
         return view('auth.forgot-password');
@@ -20,6 +28,10 @@ class ForgotPasswordController extends Controller
     {
         $request->validate([
             'email' => ['required', 'email'],
+            'captcha' => ['required', 'captcha'],
+        ], [
+            'captcha.captcha' => 'Invalid captcha. Please try again.',
+            'captcha.required' => 'The captcha field is required.'
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -28,17 +40,14 @@ class ForgotPasswordController extends Controller
             return back()->withInput()->withErrors(['email' => 'We could not find a user with that email address.']);
         }
 
-        $otpCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        OtpLog::create([
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'otp_code' => $otpCode,
-            'verified' => false,
-            'purpose' => 'password_reset',
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $this->otpService->generateAndSendOtp(
+            $user->id,
+            $user->email,
+            'password_reset',
+            'Your OTP for password reset is:',
+            $request->ip(),
+            $request->userAgent()
+        );
 
         session([
             'password_reset_email' => $user->email,
@@ -62,6 +71,10 @@ class ForgotPasswordController extends Controller
         $request->validate([
             'email' => ['required', 'email'],
             'otp_code' => ['required', 'digits:6'],
+            'captcha' => ['required', 'captcha'],
+        ], [
+            'captcha.captcha' => 'Invalid captcha. Please try again.',
+            'captcha.required' => 'The captcha field is required.'
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -70,20 +83,15 @@ class ForgotPasswordController extends Controller
             return back()->withInput()->withErrors(['email' => 'We could not find a user with that email address.']);
         }
 
-        $otpLog = OtpLog::where('user_id', $user->id)
-            ->where('purpose', 'password_reset')
-            ->latest()
-            ->first();
+        $isValid = $this->otpService->verifyOtp($user->id, $request->otp_code, 'password_reset');
 
-        if (! $otpLog || $otpLog->otp_code !== $request->otp_code) {
+        if (! $isValid) {
             return back()
                 ->withInput()
                 ->with('otp_required', true)
                 ->with('email', $request->email)
-                ->withErrors(['otp_code' => 'Invalid OTP. Please try again.']);
+                ->withErrors(['otp_code' => 'Invalid OTP or expired. Please try again.']);
         }
-
-        $otpLog->update(['verified' => true]);
 
         session([
             'password_reset_verified_email' => $user->email,

@@ -13,8 +13,8 @@
                     <div style="color: #facc15; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
                         Application #{{ $allottee->application_no ?? 'N/A' }}
                     </div>
-                    <h2 style="font-weight: 700; margin-bottom: 10px; font-size: 28px;">
-                        Welcome back, {{ trim(($allottee->prefix ?? '') . ' ' . ($allottee->allottee_name ?? '') . ' ' . ($allottee->allottee_surname ?? '')) }}
+                    <h2 style="font-weight: 700; margin-bottom: 10px; font-size: 24px;">
+                        {{ trim(($allottee->prefix ?? '') . ' ' . ($allottee->allottee_name ?? '') . ' ' . ($allottee->allottee_surname ?? '')) }}
                     </h2>
                     <p style="margin: 0; opacity: 0.9; font-size: 15px; max-width: 600px;">
                         <i class="fa-solid fa-map-pin me-1"></i> {{ $allottee->propertyCategory->name ?? 'Category' }} - {{ $allottee->propertyType->name ?? 'Property' }} ({{ $allottee->quarterType->quarter_name ?? 'Type' }}) <br>
@@ -122,7 +122,32 @@
         <div class="row g-4">
             <!-- Details Column -->
             <div class="col-lg-8">
-                <!-- Recent Transactions -->
+                <!-- Notices -->
+                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                    <div class="card-body p-0">
+                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-bullhorn text-warning me-2"></i>Notices & Announcements</h6>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item p-3 border-bottom">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold text-dark">Extension of EMI Payment Deadline</h6>
+                                    <small class="text-muted">3 days ago</small>
+                                </div>
+                                <p class="mb-0 text-muted small">The board has decided to extend the deadline for the current month's EMI payment without any late fees until the 15th of the month.</p>
+                            </div>
+                            <div class="list-group-item p-3">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold text-dark">Property Registration Camp</h6>
+                                    <small class="text-muted">1 week ago</small>
+                                </div>
+                                <p class="mb-0 text-muted small">A special camp for property registration will be held at the regional office. All allottees who have completed 100% payment are requested to attend with original documents.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                                <!-- Recent Transactions -->
                 <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
                     <div class="card-body p-0 border-bottom">
                         <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light">
@@ -179,31 +204,6 @@
                         @endif
                     </div>
                 </div>
-
-                <!-- Notices -->
-                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
-                    <div class="card-body p-0">
-                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light border-bottom">
-                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-bullhorn text-warning me-2"></i>Notices & Announcements</h6>
-                        </div>
-                        <div class="list-group list-group-flush">
-                            <div class="list-group-item p-4 border-bottom">
-                                <div class="d-flex w-100 justify-content-between mb-1">
-                                    <h6 class="mb-0 fw-bold text-dark">Extension of EMI Payment Deadline</h6>
-                                    <small class="text-muted">3 days ago</small>
-                                </div>
-                                <p class="mb-0 text-muted small">The board has decided to extend the deadline for the current month's EMI payment without any late fees until the 15th of the month.</p>
-                            </div>
-                            <div class="list-group-item p-4">
-                                <div class="d-flex w-100 justify-content-between mb-1">
-                                    <h6 class="mb-0 fw-bold text-dark">Property Registration Camp</h6>
-                                    <small class="text-muted">1 week ago</small>
-                                </div>
-                                <p class="mb-0 text-muted small">A special camp for property registration will be held at the regional office. All allottees who have completed 100% payment are requested to attend with original documents.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Sidebar / Extra Details -->
@@ -229,6 +229,31 @@
                     </div>
                 </div>
                 @endif
+
+                                <!-- Calendar -->
+                <link rel="stylesheet" href="{{ asset('css/calendar.css') }}">
+                
+                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;" id="calendarApp">
+                    <div class="card-body p-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light">
+                            <h6 class="fw-bold mb-0 text-dark" style="display:flex; align-items:center;">
+                                <i class="fa-regular fa-calendar-alt text-muted me-2"></i>
+                                <span id="monthYearDisplay">January 2026</span>
+                            </h6>
+                            <div class="nav-buttons d-flex gap-2">
+                                <button id="prevMonthBtn" class="btn btn-sm btn-outline-secondary py-0 px-2 border-0"><i class="fas fa-chevron-left" style="font-size: 10px;"></i></button>
+                                <button id="nextMonthBtn" class="btn btn-sm btn-outline-secondary py-0 px-2 border-0"><i class="fas fa-chevron-right" style="font-size: 10px;"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 calendar-card">
+                        <div class="weekdays">
+                            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span>
+                            <span>Th</span><span>Fr</span><span>Sa</span>
+                        </div>
+                        <div class="days-grid" id="daysGrid"></div>
+                    </div>
+                </div>
 
                 <!-- Contact & Bank Info -->
                 <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
@@ -266,89 +291,10 @@
                     </div>
                 </div>
 
-                <!-- Calendar -->
-                <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
-                    <div class="card-body p-0 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center p-3 px-4 bg-light">
-                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-regular fa-calendar-alt text-muted me-2"></i>Calendar</h6>
-                        </div>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="text-center" id="calendarWidget">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <button class="btn btn-sm btn-light py-0 px-2" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left" style="font-size: 10px;"></i></button>
-                                <span class="fw-bold text-dark" id="calendarMonthYear"></span>
-                                <button class="btn btn-sm btn-light py-0 px-2" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i></button>
-                            </div>
-                            <div class="row g-1 text-center small fw-bold text-muted mb-2" style="font-size: 12px;">
-                                <div class="col">Su</div><div class="col">Mo</div><div class="col">Tu</div>
-                                <div class="col">We</div><div class="col">Th</div><div class="col">Fr</div><div class="col">Sa</div>
-                            </div>
-                            <div id="calendarDays">
-                                <!-- Dynamically populated via JS -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
 
     @endif
 </div>
 
-<script>
-    let currentDate = new Date();
-    
-    function renderCalendar() {
-        const monthYearStr = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-        const calendarMonthYear = document.getElementById('calendarMonthYear');
-        if (calendarMonthYear) calendarMonthYear.innerText = monthYearStr;
-        
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-        
-        const today = new Date();
-        const isCurrentMonth = today.getFullYear() === currentDate.getFullYear() && today.getMonth() === currentDate.getMonth();
-        
-        let html = '<div class="row g-1 text-center small">';
-        for (let i = 0; i < firstDay; i++) {
-            html += '<div class="col"><div class="p-1 text-muted opacity-25">-</div></div>';
-        }
-        
-        for (let day = 1; day <= daysInMonth; day++) {
-            const isToday = isCurrentMonth && day === today.getDate();
-            const classes = isToday ? 'bg-primary text-white fw-bold shadow-sm' : 'text-dark hover-bg-light';
-            const cursor = isToday ? 'cursor: pointer;' : 'cursor: pointer; transition: background 0.2s;';
-            
-            html += `
-                <div class="col">
-                    <div class="p-1 rounded ${classes}" style="${cursor}" onmouseover="if(!this.classList.contains('bg-primary')) this.style.backgroundColor='#f8f9fa'" onmouseout="if(!this.classList.contains('bg-primary')) this.style.backgroundColor='transparent'">${day}</div>
-                </div>
-            `;
-            
-            if ((day + firstDay) % 7 === 0) {
-                html += '</div><div class="row g-1 text-center small mt-1">';
-            }
-        }
-        html += '</div>';
-        
-        const calendarDays = document.getElementById('calendarDays');
-        if (calendarDays) calendarDays.innerHTML = html;
-    }
-    
-    function changeMonth(offset) {
-        currentDate.setMonth(currentDate.getMonth() + offset);
-        renderCalendar();
-    }
-    
-    // Initialize on load
-    document.addEventListener('DOMContentLoaded', function() {
-        renderCalendar();
-    });
-    // Fallback for SPA/dynamic loads
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(renderCalendar, 100);
-    }
-</script>
-0
+<script src="{{ asset('js/calendar.js') }}"></script>

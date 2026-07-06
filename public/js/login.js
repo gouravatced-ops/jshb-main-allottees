@@ -17,39 +17,7 @@ if (togglePassword) {
 }
 
 (function () {
-    // CAPTCHA GENERATOR (fully functional)
-    const captchaDiv = document.getElementById('captchaCode');
-    const refreshBtn = document.getElementById('refreshCaptcha');
 
-    function generateCaptcha() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ123456789';
-        let captcha = '';
-        for (let i = 0; i < 5; i++) {
-            captcha += chars[Math.floor(Math.random() * chars.length)];
-        }
-        if (captchaDiv) captchaDiv.innerText = captcha;
-        return captcha;
-    }
-    if (captchaDiv && refreshBtn) {
-        generateCaptcha();
-        refreshBtn.addEventListener('click', () => generateCaptcha());
-        const captchaInput = document.getElementById('captcha_input');
-        const loginBtn = document.getElementById('loginBtn');
-
-        function validateCaptcha() {
-            if (!captchaDiv || !captchaInput) return;
-            const currentCaptcha = captchaDiv.innerText;
-            const entered = captchaInput.value.trim().toUpperCase();
-            if (loginBtn) {
-                if (entered === currentCaptcha && entered !== '') {
-                    loginBtn.disabled = false;
-                } else {
-                    loginBtn.disabled = true;
-                }
-            }
-        }
-        captchaInput.addEventListener('input', validateCaptcha);
-    }
 
     // CAROUSEL BACKGROUND SLIDER (auto smooth)
     const slides = document.querySelectorAll('.bg-slide');
@@ -59,25 +27,31 @@ if (togglePassword) {
             slides[currentSlide].classList.remove('active');
             currentSlide = (currentSlide + 1) % slides.length;
             slides[currentSlide].classList.add('active');
-        }, 4800);
+        }, 5000); // 5 seconds
     }
 
-    // dynamically handle otp stage (enable login button for OTP stage by default)
-    const loginForm = document.querySelector('.login-form');
-    const otpStage = document.querySelector('input[name="otp_stage"]');
-    const loginBtnForm = document.getElementById('loginBtn');
-    if (otpStage && otpStage.value === '1') {
-        if (loginBtnForm) loginBtnForm.disabled = false;
-    } else {
-        // if captcha exists and fields empty, leave disabled initially; but if captcha pre-filled? we call validation once
-        if (captchaDiv && document.getElementById('captcha_input')) {
-            const captchaInp = document.getElementById('captcha_input');
-            if (captchaInp && captchaInp.value.trim() !== '') {
-                const curr = captchaDiv.innerText;
-                if (curr && captchaInp.value.trim().toUpperCase() === curr) {
-                    if (loginBtnForm) loginBtnForm.disabled = false;
-                }
+    // Add loader to loginBtn to prevent multiple submissions
+    const form = document.querySelector('form');
+    const loginBtn = document.getElementById('loginBtn');
+    if (form && loginBtn) {
+        form.addEventListener('submit', function (e) {
+            // Only show loader if the form is valid according to HTML5 validation
+            if (form.checkValidity()) {
+                const originalText = loginBtn.innerHTML;
+                // Add fixed width/height to prevent button size jumping if desired
+                loginBtn.style.minWidth = loginBtn.offsetWidth + 'px';
+                
+                // Show loader
+                loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> कृपया प्रतीक्षा करें...';
+                loginBtn.style.pointerEvents = 'none';
+                loginBtn.style.opacity = '0.8';
+
+                // We don't disable the button permanently because some browsers cache DOM state on back/forward navigation
+                // and we want it to be enabled if validation fails and page re-renders. 
+                // pointer-events: none is sufficient to prevent multiple clicks before reload.
             }
-        }
+        });
     }
+
+
 })();
