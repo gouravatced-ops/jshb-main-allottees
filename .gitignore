@@ -25,3 +25,6 @@ Thumbs.db
 public/documents/*
 public/uploads/*
 storage
+.htaccess
+documents/
+config/database.php
