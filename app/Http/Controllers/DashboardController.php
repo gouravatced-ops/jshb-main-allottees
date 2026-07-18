@@ -12,6 +12,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ProcessStepService;
+use App\Models\Application;
+use App\Models\Allottee;
 
 class DashboardController extends Controller
 {
@@ -37,7 +39,7 @@ class DashboardController extends Controller
 
         $user = Auth::user();
 
-        $allottee = \App\Models\Allottee::with([
+        $allottee = Allottee::with([
             'alloteeAdresses',
             'nomineesBank',
             'documentData',
@@ -64,17 +66,22 @@ class DashboardController extends Controller
         
         $steps = $allottee->processSteps()->orderBy('step_no')->get();
         
+        $pendingApplication = Application::where('allottee_id', $allottee->id)
+            ->whereIn('status', ['pending', 'in_progress', 'forwarded'])
+            ->first();
+
+        
         $blade = 'allottee-dashboard';
         $step = null;
         
 
-        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step'));
+        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step', 'pendingApplication'));
     }
 
     public function section(Request $request, $blade)
     {
         $user = Auth::user();
-        $allottee = \App\Models\Allottee::with([
+        $allottee = Allottee::with([
             'alloteeAdresses',
             'nomineesBank',
             'documentData',
@@ -102,7 +109,25 @@ class DashboardController extends Controller
         // Find the step corresponding to this blade
         $step = $steps->firstWhere('blade', $blade);
 
-        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step'));
+        $pendingApplication = Application::where('allottee_id', $allottee->id)
+            ->whereIn('status', ['pending', 'in_progress', 'forwarded'])
+            ->first();
+
+        $applicationStats = null;
+        $allApplications = null;
+        if ($blade === 'application') {
+            $allApplications = Application::with(['currentStep', 'currentRole'])->where('allottee_id', $allottee->id)->orderBy('created_at', 'desc')->get();
+            $applicationStats = [
+                'total' => $allApplications->count(),
+                'pending' => $allApplications->where('status', 'pending')->count(),
+                'in_progress' => $allApplications->whereIn('status', ['in_progress', 'forwarded'])->count(),
+                'approved' => $allApplications->where('status', 'approved')->count(),
+                'completed' => $allApplications->where('status', 'completed')->count(),
+                'rejected' => $allApplications->where('status', 'rejected')->count(),
+            ];
+        }
+
+        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step', 'pendingApplication', 'applicationStats', 'allApplications'));
     }
 
 

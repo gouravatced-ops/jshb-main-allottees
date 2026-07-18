@@ -40,7 +40,7 @@
     </div>
     
     <div class="nav-item-wrap">
-        <a class="nav-link-custom {{ request()->is('application') ? 'active' : '' }}" href="#">
+        <a class="nav-link-custom {{ (request()->routeIs('dashboard.section') && request()->route('blade') === 'application') ? 'active' : '' }}" href="{{ route('dashboard.section', ['blade' => 'application']) }}">
             <div class="nav-icon"><i class="fa-solid fa-file-lines"></i></div>
             <span class="nav-text">Application</span>
         </a>
