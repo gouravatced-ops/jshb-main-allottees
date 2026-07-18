@@ -55,6 +55,33 @@
             $post_office = $contact->present_post_office ?? $contact->permanent_post_office ?? '-';
         @endphp
 
+        <!-- Application Status Card -->
+        @if(isset($pendingApplication) && $pendingApplication)
+        <div class="row mb-1">
+            <div class="col-12">
+                <div class="card border-0" style="background: linear-gradient(to right, #fff3cd, #fff8e1); border-left: 4px solid #ffc107 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px;">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; background: rgba(255, 193, 7, 0.2); color: #b8860b;">
+                                <i class="fa-solid fa-file-signature fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">Application Status: <span class="text-warning-emphasis">Pending</span></h6>
+                                <p class="mb-0 text-muted small">
+                                    You have a pending <strong>{{ ucfirst(str_replace('_', ' ', $pendingApplication->application_type)) }}</strong> application. 
+                                    (Application No: {{ $pendingApplication->application_no ?? '-' }})
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 13px; font-weight: 600;">Processing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Stats Row -->
         <div class="row g-4 mb-4">
             <!-- Total Paid -->

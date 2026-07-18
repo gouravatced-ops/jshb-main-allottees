@@ -39,14 +39,14 @@ class AuthController extends Controller
 
         $otpStage = (bool) $request->input('otp_stage', false);
         $user = User::where('email', $request->email)
-            ->orWhere('name', $request->email)
+            ->orWhere('username', $request->email)
             ->first();
 
         // If not found in default DB, check adms_allottees DB
         if (! $user) {
             $user = User::on('adms_allottees')
                 ->where('email', $request->email)
-                ->orWhere('name', $request->email)
+                ->orWhere('username', $request->email)
                 ->first();
         }
 

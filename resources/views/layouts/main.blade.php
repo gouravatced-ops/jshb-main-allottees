@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{{ asset('css/font.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('css/allottee/dashboard.css') }}">
+    @vite(['resources/js/app.js'])
 </head>
 
 <body>
