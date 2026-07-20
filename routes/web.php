@@ -39,5 +39,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/scheme-list', [CommonController::class, 'getSchemeList']);
     Route::get('/get-scheme-details/{id}',[CommonController::class, 'getSchemeDetails']);
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/document-requests/upload', [\App\Http\Controllers\DashboardController::class, 'uploadDocumentRequest'])->name('allottee.document-requests.upload');
     Route::get('/{blade}', [\App\Http\Controllers\DashboardController::class, 'section'])->name('dashboard.section');
 });

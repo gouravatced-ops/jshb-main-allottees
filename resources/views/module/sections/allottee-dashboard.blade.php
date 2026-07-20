@@ -82,6 +82,44 @@
         </div>
         @endif
 
+        <!-- Pending Document Requests -->
+        @if(isset($documentRequests) && $documentRequests->count() > 0)
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0" style="background: #fff; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.15); border-radius: 8px; border-left: 4px solid #dc3545 !important;">
+                    <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                        <h6 class="mb-0 fw-bold text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> Action Required: Pending Document Requests</h6>
+                        <p class="text-muted small mt-1 mb-0">The Engineer has requested additional documents for verification. Please upload them before they expire.</p>
+                    </div>
+                    <div class="card-body">
+                        @foreach($documentRequests as $req)
+                        <div class="d-flex align-items-center justify-content-between p-3 mb-2 rounded" style="background: #f8f9fa; border: 1px solid #eee;">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ $req->documentMaster ? $req->documentMaster->document_name : 'Document' }}</h6>
+                                <p class="mb-1 small text-muted"><i class="fa-solid fa-comment-dots"></i> Instructions: {{ $req->remarks ?: 'No specific instructions.' }}</p>
+                                <p class="mb-0 small text-danger fw-bold"><i class="fa-regular fa-clock"></i> Expires: {{ $req->expires_at->format('d-M-Y H:i') }}</p>
+                            </div>
+                            <div>
+                                @if($req->expires_at->isPast())
+                                    <span class="badge bg-danger">Expired</span>
+                                @else
+                                    <button type="button" class="btn btn-sm btn-outline-danger px-3 fw-bold upload-btn" 
+                                        data-bs-toggle="modal" data-bs-target="#uploadRequestedDocModal"
+                                        data-req-id="{{ $req->id }}"
+                                        data-doc-id="{{ $req->document_master_id }}"
+                                        data-doc-name="{{ $req->documentMaster ? $req->documentMaster->document_name : '' }}">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Now
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Stats Row -->
         <div class="row g-4 mb-4">
             <!-- Total Paid -->
@@ -323,5 +361,63 @@
 
     @endif
 </div>
+
+<!-- Upload Requested Document Modal -->
+<div class="modal fade" id="uploadRequestedDocModal" tabindex="-1" aria-labelledby="uploadRequestedDocModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header text-white" style="background: #dc3545;">
+        <h5 class="modal-title" id="uploadRequestedDocModalLabel">
+            <i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload Document
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ route('allottee.document-requests.upload') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <input type="hidden" name="document_request_id" id="modal_req_id">
+        <input type="hidden" name="document_master_id" id="modal_doc_id">
+        
+        <div class="modal-body p-4">
+            <div class="alert alert-info py-2 small mb-4">
+                <i class="fa-solid fa-circle-info me-1"></i> You are uploading: <strong id="modal_doc_name"></strong>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Select File (PDF, JPG, PNG)</label>
+                <div class="p-4 text-center border rounded bg-light" style="border-style: dashed !important; border-color: #ccc !important;">
+                    <i class="fa-solid fa-file-arrow-up fs-2 text-muted mb-2"></i><br>
+                    <input class="form-control" type="file" name="document_file" accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+                <div class="form-text mt-2"><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Max file size: 5MB</div>
+            </div>
+        </div>
+        <div class="modal-footer bg-light border-top-0">
+            <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger px-4 fw-bold">
+                <i class="fa-solid fa-upload me-1"></i> Upload
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadModal = document.getElementById('uploadRequestedDocModal');
+        if (uploadModal) {
+            uploadModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const reqId = button.getAttribute('data-req-id');
+                const docId = button.getAttribute('data-doc-id');
+                const docName = button.getAttribute('data-doc-name');
+
+                document.getElementById('modal_req_id').value = reqId;
+                document.getElementById('modal_doc_id').value = docId;
+                document.getElementById('modal_doc_name').innerText = docName;
+            });
+        }
+    });
+</script>
 
 <script src="{{ asset('js/calendar.js') }}"></script>
