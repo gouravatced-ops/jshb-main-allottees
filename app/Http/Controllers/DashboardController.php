@@ -136,7 +136,14 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step', 'pendingApplication', 'applicationStats', 'allApplications'));
+        $notifications = null;
+        if ($blade === 'notifications') {
+            $notifications = \App\Models\Notification::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step', 'pendingApplication', 'applicationStats', 'allApplications', 'notifications'));
     }
 
     public function uploadDocumentRequest(Request $request)
@@ -223,6 +230,20 @@ class DashboardController extends Controller
                     'status' => 'uploaded',
                     'uploaded_document_id' => $allotteeDoc->id
                 ]);
+
+                // Notify the Engineer who requested the document
+                if ($docRequest->requested_by) {
+                    app(\App\Services\NotificationService::class)->send([
+                        'user_id' => $docRequest->requested_by,
+                        'notification_type' => 'success',
+                        'subject' => 'Document Uploaded by Allottee',
+                        'message' => "The allottee ({$user->name}) has uploaded the requested document: {$docName}.",
+                        'send_email' => true,
+                        'send_sms' => true, // Since it's to an engineer, maybe we enable sms/whatsapp as per config
+                        'send_whatsapp' => true,
+                        'link' => null
+                    ]);
+                }
 
                 return back()->with('success', 'Document uploaded successfully.');
             } else {

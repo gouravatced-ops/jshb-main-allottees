@@ -53,6 +53,13 @@
         </a>
     </div>
 
+    <div class="nav-item-wrap">
+        <a class="nav-link-custom {{ (request()->routeIs('dashboard.section') && request()->route('blade') === 'notifications') ? 'active' : '' }}" href="{{ route('dashboard.section', ['blade' => 'notifications']) }}">
+            <div class="nav-icon"><i class="fa-solid fa-bell"></i></div>
+            <span class="nav-text">Notifications</span>
+        </a>
+    </div>
+
     @if($steps->isNotEmpty())
         <div class="sidebar-section-label mt-3">Allottee Process</div>
         <!-- Dynamic Process Steps -->
