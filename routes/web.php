@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,6 +31,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/password/check-expiry', [PasswordController::class, 'checkPasswordExpiry'])->name('password.check-expiry');
     Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
     Route::post('/password/generate-captcha', [PasswordController::class, 'generateCaptcha'])->name('password.captcha');
+
+    // Notification routes
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 
     // common Routes for retrive condition response of data
     Route::get('/get-sub-divisions/{division}', [CommonController::class, 'getDivision']);

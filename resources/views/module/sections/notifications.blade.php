@@ -1,8 +1,13 @@
-<div class="section-header mb-4 d-flex justify-content-between align-items-center">
+<div class="section-header mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
     <div>
         <h4 class="fw-bold mb-1" style="color: #0f1b2d;"><i class="fa-solid fa-bell me-2"></i> Notifications</h4>
         <p class="text-muted mb-0" style="font-size: 14px;">View your recent alerts, updates, and delivery statuses.</p>
     </div>
+    @if($notifications && $notifications->where('is_read', false)->count() > 0)
+        <button id="markAllReadBtn" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-medium" onclick="markAllNotificationsAsRead()">
+            <i class="fa-solid fa-check-double me-1"></i> Mark all as read
+        </button>
+    @endif
 </div>
 
 <div class="row">
@@ -10,7 +15,15 @@
         @if($notifications && $notifications->isNotEmpty())
             <div class="notification-list">
                 @foreach($notifications as $notif)
-                    <div class="notification-card shadow-sm mb-3">
+                    @php
+                        $notifData = [
+                            'id' => $notif->id,
+                            'subject' => $notif->subject,
+                            'message' => $notif->message,
+                            'is_read' => (bool)$notif->is_read,
+                        ];
+                    @endphp
+                    <div class="notification-card shadow-sm mb-3 {{ !$notif->is_read ? 'unread-card' : '' }}" id="notif-card-{{ $notif->id }}">
                         <div class="d-flex w-100 align-items-start p-3">
                             <div class="notif-icon-wrap me-3">
                                 @if($notif->notification_type === 'success' || strtolower($notif->subject) === 'success')
@@ -33,26 +46,31 @@
                             </div>
                             
                             <div class="notif-content flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="fw-bold mb-0" style="color: #0f1b2d;">{{ $notif->subject }}</h6>
+                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                                    <div class="d-flex align-items-center">
+                                        <h6 class="fw-bold mb-0 me-2" style="color: #0f1b2d;">{{ $notif->subject }}</h6>
+                                        @if(!$notif->is_read)
+                                            <span class="badge bg-primary rounded-pill unread-badge" id="notif-badge-{{ $notif->id }}" style="font-size: 10px;">New</span>
+                                        @endif
+                                    </div>
                                     <small class="text-muted" style="font-size: 12px;">
                                         <i class="fa-regular fa-clock me-1"></i> {{ $notif->created_at->diffForHumans() }}
                                     </small>
                                 </div>
-                                <p class="mb-2 text-secondary" style="font-size: 14px; line-height: 1.5;">
-                                    {!! nl2br(e($notif->message)) !!}
+                                <p class="mb-2 text-secondary notif-text-preview" style="font-size: 14px; line-height: 1.5;">
+                                    {!! nl2br(e(Str::limit($notif->message, 150))) !!}
                                 </p>
                                 
-                                @if($notif->link)
-                                    <a href="{{ $notif->link }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 mb-2" style="font-size: 12px;">
-                                        View Details <i class="fa-solid fa-arrow-right ms-1"></i>
-                                    </a>
-                                @endif
+                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1" style="font-size: 12px;" onclick='openNotifModal(@json($notifData))'>
+                                        View Details <i class="fa-solid fa-eye ms-1"></i>
+                                    </button>
+                                </div>
 
                                 <div class="delivery-status-wrap mt-2 pt-2 border-top">
                                     <span class="delivery-label me-3 text-muted" style="font-size: 12px; font-weight: 500;">Delivery Status:</span>
                                     
-                                    <!-- WhatsApp (Mapped to is_push_sent) -->
+                                    <!-- WhatsApp -->
                                     <div class="delivery-badge badge-whatsapp {{ $notif->is_push_sent ? 'success' : 'failed' }}" title="WhatsApp">
                                         <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
                                         @if($notif->is_push_sent)
@@ -99,8 +117,36 @@
     </div>
 </div>
 
+<!-- NOTIFICATION DETAIL MODAL (Subject & Message Only) -->
+<div class="modal fade" id="notificationDetailModal" tabindex="-1" aria-labelledby="notifModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom-0">
+                <h5 class="modal-title fw-bold" id="notifModalTitle" style="color: #0f1b2d;">
+                    Notification Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="text-muted fw-bold text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px;">Subject</label>
+                    <h5 class="fw-bold mb-0" id="modalNotifSubject" style="color: #0f1b2d;"></h5>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 border">
+                    <label class="text-muted fw-bold text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px;">Message</label>
+                    <p class="mb-0 text-dark" id="modalNotifMessage" style="font-size: 14px; white-space: pre-line; line-height: 1.6;"></p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top-0">
+                <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    /* Premium Notification Card Styling */
+    /* Notification Card Styling */
     .notification-card {
         background: #ffffff;
         border-radius: 12px;
@@ -110,6 +156,11 @@
         overflow: hidden;
     }
     
+    .notification-card.unread-card {
+        border-left: 4px solid #0284c7;
+        background-color: #f8fafc;
+    }
+
     .notification-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(15, 27, 45, 0.08) !important;
@@ -182,7 +233,6 @@
         vertical-align: middle;
     }
 
-    /* SVG Colors */
     .delivery-badge.success .status-svg {
         stroke: #16a34a;
     }
@@ -191,8 +241,89 @@
         stroke: #ef4444;
     }
 
-    /* Empty State */
     .empty-state {
         border: 1px dashed #cbd5e1;
     }
 </style>
+
+<script>
+let notifModalObj = null;
+
+function updateSidebarCount(count) {
+    const badge = document.getElementById('sidebarNotifBadge');
+    if (badge) {
+        badge.innerText = count;
+        if (parseInt(count) > 0) {
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    }
+}
+
+function openNotifModal(data) {
+    document.getElementById('modalNotifSubject').innerText = data.subject || '';
+    document.getElementById('modalNotifMessage').innerText = data.message || '';
+
+    // Show modal
+    const modalEl = document.getElementById('notificationDetailModal');
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        notifModalObj = new bootstrap.Modal(modalEl);
+        notifModalObj.show();
+    }
+
+    // Mark as read if unread
+    if (!data.is_read) {
+        fetch('/notifications/' + data.id + '/read', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === 'success') {
+                data.is_read = true;
+                const card = document.getElementById('notif-card-' + data.id);
+                if (card) {
+                    card.classList.remove('unread-card');
+                }
+                const unreadTag = document.getElementById('notif-badge-' + data.id);
+                if (unreadTag) {
+                    unreadTag.remove();
+                }
+                updateSidebarCount(res.unread_count);
+                if (parseInt(res.unread_count) === 0) {
+                    const markAllBtn = document.getElementById('markAllReadBtn');
+                    if (markAllBtn) markAllBtn.remove();
+                }
+            }
+        })
+        .catch(err => console.error('Error marking notification read:', err));
+    }
+}
+
+function markAllNotificationsAsRead() {
+    fetch('/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            document.querySelectorAll('.unread-card').forEach(card => card.classList.remove('unread-card'));
+            document.querySelectorAll('.unread-badge').forEach(badge => badge.remove());
+            updateSidebarCount(0);
+            const markAllBtn = document.getElementById('markAllReadBtn');
+            if (markAllBtn) markAllBtn.remove();
+        }
+    })
+    .catch(err => console.error('Error marking all notifications read:', err));
+}
+</script>

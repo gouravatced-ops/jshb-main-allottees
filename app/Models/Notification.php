@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     use HasFactory;
-
-    protected $connection = 'adms_jshb';
     protected $table = 'notifications';
 
     // Disable updated_at since it's not in the table

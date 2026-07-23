@@ -220,6 +220,7 @@ class DashboardController extends Controller
                 $allotteeDoc = AllotteeDocument::create([
                     'allottee_id' => $allottee->id,
                     'document_id' => $request->document_master_id,
+                    'document_type' => $docName,
                     'file_path' => $receiptPath,
                     'file_name' => $receiptFile,
                     'remarks' => 'Uploaded as per engineer request.',
