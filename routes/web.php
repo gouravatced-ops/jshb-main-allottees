@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,6 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
     Route::post('/password/generate-captcha', [PasswordController::class, 'generateCaptcha'])->name('password.captcha');
 
+    // Notification routes
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+
     // common Routes for retrive condition response of data
     Route::get('/get-sub-divisions/{division}', [CommonController::class, 'getDivision']);
     Route::get('/get-property-types/{category}', [CommonController::class, 'getPropertyType']);
@@ -39,5 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/scheme-list', [CommonController::class, 'getSchemeList']);
     Route::get('/get-scheme-details/{id}',[CommonController::class, 'getSchemeDetails']);
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/document-requests/upload', [\App\Http\Controllers\DashboardController::class, 'uploadDocumentRequest'])->name('allottee.document-requests.upload');
     Route::get('/{blade}', [\App\Http\Controllers\DashboardController::class, 'section'])->name('dashboard.section');
 });

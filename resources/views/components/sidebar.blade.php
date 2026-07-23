@@ -19,6 +19,11 @@
     }
     
     $currentStepNo = request()->query('step', 1);
+    $unreadNotifCount = \App\Models\Notification::where('user_id', auth()->id())
+        ->where(function($q) {
+            $q->where('is_read', false)->orWhere('is_read', 0)->orWhereNull('is_read');
+        })
+        ->count();
 @endphp
 
 <aside id="sidebar">
@@ -50,6 +55,14 @@
         <a class="nav-link-custom {{ request()->is('notices') ? 'active' : '' }}" href="{{ route('dashboard.section', ['blade' => 'notices']) }}">
             <div class="nav-icon"><i class="fa-solid fa-bullhorn"></i></div>
             <span class="nav-text">Notices</span>
+        </a>
+    </div>
+
+    <div class="nav-item-wrap">
+        <a class="nav-link-custom {{ (request()->routeIs('dashboard.section') && request()->route('blade') === 'notifications') ? 'active' : '' }}" href="{{ route('dashboard.section', ['blade' => 'notifications']) }}">
+            <div class="nav-icon"><i class="fa-solid fa-bell"></i></div>
+            <span class="nav-text">Notifications</span>
+            <span class="badge bg-danger rounded-pill ms-auto sidebar-notif-badge {{ $unreadNotifCount > 0 ? '' : 'd-none' }}" id="sidebarNotifBadge" style="font-size: 11px; padding: 3px 8px;">{{ $unreadNotifCount }}</span>
         </a>
     </div>
 
