@@ -15,7 +15,7 @@
     <div class="card-body">
         <h6 class="mb-2">Choose Payment Option</h6>
         <p class="text-muted mb-3">If EMI 60 is selected, remaining amount will be distributed into 60 monthly installments. If one-time is selected, final calculation sheet is generated and re-calculation stays locked.</p>
-        <form method="POST" action="{{ route('admin.allottees.payment-plan', $allottee) }}" class="d-flex gap-2">
+        <form method="POST" action="{{ '#' }}" class="d-flex gap-2">
             @csrf
             <button class="btn btn-primary" type="submit" name="payment_option" value="emi_60">Choose EMI 60</button>
             <button class="btn btn-success" type="submit" name="payment_option" value="one_time">Choose One-Time</button>

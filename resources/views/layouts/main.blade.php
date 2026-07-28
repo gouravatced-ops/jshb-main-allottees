@@ -122,7 +122,7 @@
     <!-- SPLASH NOTICE -->
     <div class="header-splash-notice">
         <marquee behavior="scroll" direction="left" onmouseover="this.stop();" onmouseout="this.start();" scrollamount="5">
-            <span class="badge bg-danger me-2">Notice</span> All allottees must complete their KYC updates by 31st August 2026. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+            <span class="badge bg-danger me-2">Notice</span> All allottees must complete their KYC updates by 31st August 2026. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <span class="badge bg-warning text-dark me-2">Warning</span> Do not share your login credentials or OTP with anyone. The Board will never call you to ask for your password.
         </marquee>
     </div>
@@ -349,11 +349,11 @@
 
         });
     </script>
-    <script>
+    <!-- <script>
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(el => el.remove());
         }, 3000);
-    </script>
+    </script> -->
 </body>
 
 </html>

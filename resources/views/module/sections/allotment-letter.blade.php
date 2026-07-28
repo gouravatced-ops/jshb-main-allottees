@@ -46,7 +46,7 @@
             ">
             @if ($allotmentLetter)
                 {{-- VIEW GENERATED LETTER --}}
-                <a href="{{ asset($allotmentLetter->file_path) }}" target="_blank" class="btn-brand"
+                <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/') }}" target="_blank" class="btn-brand"
                     style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -55,7 +55,7 @@
                     View Generated Copy
                 </a>
                 {{-- DOWNLOAD GENERATED LETTER --}}
-                <a href="{{ asset($allotmentLetter->file_path) }}" download class="btn-brand"
+                <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/') }}" download class="btn-brand"
                     style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -65,7 +65,7 @@
                 </a>
                 {{-- VIEW SIGNED COPY --}}
                 @if ($allotmentLetter->signed_file_path)
-                    <a href="{{ asset($allotmentLetter->signed_file_path) }}" target="_blank" class="btn-brand"
+                    <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/') }}" target="_blank" class="btn-brand"
                         style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -74,7 +74,7 @@
                         View Signed Copy
                     </a>
                     {{-- DOWNLOAD SIGNED COPY --}}
-                    <a href="{{ asset($allotmentLetter->signed_file_path) }}" download class="btn-brand"
+                    <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/') }}" download class="btn-brand"
                         style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -102,10 +102,7 @@
                     </a>
                 @endif
             @else
-                <a href="{{ route('admin.allottees.letters.allotment.pdf', [
-                    'allottee' => $allottee,
-                    'download' => 1,
-                ]) }}"
+                <a href="{{ '#' }}"
                     class="btn-brand"
                     style="
                         background:rgba(255,255,255,.95);

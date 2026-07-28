@@ -68,17 +68,17 @@ class DashboardController extends Controller
 
         // Ensure process steps exist for this allottee
         $this->processStepService->ensureProcessSteps($allottee);
-        
+
         $steps = $allottee->processSteps()->orderBy('step_no')->get();
-        
+
         $pendingApplication = Application::where('allottee_id', $allottee->id)
             ->whereIn('status', ['pending', 'in_progress', 'forwarded'])
             ->first();
 
-        
+
         $blade = 'allottee-dashboard';
         $step = null;
-        
+
         $documentRequests = \App\Models\DocumentRequest::where('allottee_id', $allottee->id)
             ->where('status', 'pending')
             ->with(['documentMaster', 'requestedBy'])
@@ -111,10 +111,10 @@ class DashboardController extends Controller
         ])->where('user_id', $user->id)->firstOrFail();
 
         $latestLogin = $user->loginLogs()->latest()->first();
-        
+
         $this->processStepService->ensureProcessSteps($allottee);
         $steps = $allottee->processSteps()->orderBy('step_no')->get();
-        
+
         // Find the step corresponding to this blade
         $step = $steps->firstWhere('blade', $blade);
 
@@ -181,8 +181,8 @@ class DashboardController extends Controller
         $dd = date('d');
 
         // Note: application is not defined in this scope, but kept for payload structure
-        $application_for = ''; 
-        
+        $application_for = '';
+
         $apiPayload = [
             'project'           => 'jshb-allottee',
             'category'          => $category,
