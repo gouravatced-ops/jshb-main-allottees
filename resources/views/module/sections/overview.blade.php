@@ -7,6 +7,7 @@
                 {{ $allottee->application_no ?? '-' }}</p>
         </div>
     </div>
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="info-card">
@@ -127,7 +128,7 @@
                 ">
 
                     <!-- VIEW -->
-                    <a href="{{ asset($filePath) }}" target="_blank" class="btn-brand"
+                    <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/') }}" target="_blank" class="btn-brand"
                         style="
                             background:rgba(255,255,255,.2);
                             border:1.5px solid rgba(255,255,255,.4)
@@ -137,7 +138,7 @@
                     </a>
 
                     <!-- DOWNLOAD -->
-                    <a href="{{ asset($filePath) }}" download class="btn-brand"
+                    <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/') }}" download class="btn-brand"
                         style="
                     background:rgba(255,255,255,.95);
                     color:var(--brand)

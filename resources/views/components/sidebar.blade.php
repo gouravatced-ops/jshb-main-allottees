@@ -74,6 +74,7 @@
                 $menu = $menuSteps->first();
 
                 // MENU VISIBILITY CONDITIONS
+                if ($allottee->is_cancelled && $menuKey !== 'lottery') continue;
                 if ($menuKey === 'choose-payment-option' && !is_null($paymentOption)) continue;
                 if ($menuKey === 'allotment-cancellation' && !is_null($paymentOption)) continue;
                 if ($menuKey === 'property-payment' && $paymentOption !== 'one_time') continue;

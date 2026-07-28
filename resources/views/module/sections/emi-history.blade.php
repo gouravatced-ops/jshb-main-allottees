@@ -276,7 +276,7 @@
                                 <td>
 
                                     @if ($txn->receipt_path)
-                                        <a href="{{ asset($txn->receipt_path) }}" target="_blank"
+                                        <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/') }}" target="_blank"
                                             class="btn btn-sm btn-outline-primary">
 
                                             <i class="fa-solid fa-file-pdf"></i>

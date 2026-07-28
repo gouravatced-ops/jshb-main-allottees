@@ -30,7 +30,7 @@
             </h5>
         </div>
         <div class="card-body p-4 bg-light">
-            <form id="siteVerificationForm" action="{{ route('admin.allottees.site-verification.store', $allottee->id) }}" data-csrf="{{ csrf_token() }}">
+            <form id="siteVerificationForm" action="{{ '#' }}" data-csrf="{{ csrf_token() }}">
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label class="form-label fw-semibold text-dark">1. आवासीय कॉलोनी का नाम (Name of residential colony)</label>

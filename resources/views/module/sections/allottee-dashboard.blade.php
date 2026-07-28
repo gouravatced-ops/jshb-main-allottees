@@ -120,6 +120,43 @@
     </div>
     @endif
 
+    @if($allottee->is_cancelled)
+    <div class="alert alert-danger mb-4 d-flex align-items-center">
+        <i class="fa-solid fa-circle-exclamation fs-3 me-3"></i>
+        <div>
+            <h5 class="alert-heading mb-1 fw-bold">Allotment Cancelled</h5>
+            <p class="mb-0">{{ $allottee->cancellation_reason ?? 'Your allotment has been cancelled because the 15% allotment amount was not paid within the mandatory 30-day period.' }}</p>
+        </div>
+    </div>
+    @else
+    @php
+    $outstandingPayment = \App\Models\AllotteePaymentOrder::where('allottee_id', $allottee->id)
+    ->where('order_type', 'allotment')
+    ->whereNotIn('order_status', ['paid', 'cancelled'])
+    ->first();
+    @endphp
+
+    @if($outstandingPayment)
+    <div class="alert alert-warning mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fa-solid fa-coins fs-3 me-3 text-warning"></i>
+            <div>
+                <h5 class="alert-heading mb-1 fw-bold">Current Outstanding Amount (15% Allotment Order)</h5>
+                <p class="mb-0">
+                    Amount: <strong>₹{{ number_format($outstandingPayment->total_payable, 2) }}</strong>
+                    <span class="ms-3 text-danger"><i class="fa-solid fa-calendar-xmark"></i> Due by: {{ \Carbon\Carbon::parse($outstandingPayment->due_date)->format('d M, Y') }} (Note: Allotment will be cancelled if not paid within 30 days)</span>
+                </p>
+            </div>
+        </div>
+        <div>
+            <a href="{{ route('dashboard.section', ['blade' => 'initial-payment']) }}" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+                <i class="fa-solid fa-credit-card me-2"></i> Pay Now
+            </a>
+        </div>
+    </div>
+    @endif
+    @endif
+
     <!-- Stats Row -->
     <div class="row g-4 mb-4">
         <!-- Total Paid -->

@@ -232,7 +232,7 @@
                 </button>
             @endif
             @if ($transaction)
-                <a href="{{ asset($transaction->receipt_path) }}" download target="_blank" class="btn-brand"
+                <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($transaction->receipt_path, '/') }}" download target="_blank" class="btn-brand"
                     style="
                 background:#fff;
                 color:var(--brand);

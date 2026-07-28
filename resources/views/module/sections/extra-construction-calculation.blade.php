@@ -5,7 +5,7 @@
         </h5>
     </div>
     <div class="card-body p-4">
-        <form id="extraConstructionForm" action="{{ route('admin.allottees.extra-construction.store', $allottee->id) }}" data-csrf="{{ csrf_token() }}" onsubmit="event.preventDefault(); window.saveExtraConstruction();">
+        <form id="extraConstructionForm" action="{{ '#' }}" data-csrf="{{ csrf_token() }}" onsubmit="event.preventDefault(); window.saveExtraConstruction();">
             @csrf
             <div class="mb-4">
                 <label class="form-label fw-bold">Is there any extra construction on the site?</label>
