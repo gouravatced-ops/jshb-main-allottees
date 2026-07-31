@@ -16,6 +16,9 @@ use App\Models\Application;
 use App\Models\Allottee;
 use App\Models\AllotteeDocument;
 use App\Models\DocumentRequest;
+use App\Models\Workflow;
+use App\Models\WorkflowStep;
+use App\Models\ApplicationMovement;
 use App\Traits\DocumentUploadTrait;
 
 class DashboardController extends Controller
@@ -253,6 +256,120 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Document Request Upload failed: " . $e->getMessage());
             return back()->with('error', 'Error uploading document: ' . $e->getMessage());
+        }
+    }
+
+    public function applyForApplication(Request $request)
+    {
+        $request->validate([
+            'application_type' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $allottee = Allottee::where('user_id', $user->id)->first();
+        if (!$allottee) {
+            return back()->with('error', 'Allottee profile not found.');
+        }
+
+        $applicationType = $request->application_type;
+
+        // Find Workflow
+        $workflow = Workflow::where('application_type', $applicationType)
+            ->where('is_active', 1)
+            ->first();
+
+        if (!$workflow) {
+            return back()->with('error', 'Workflow not found for this application type.');
+        }
+
+        $existingApplication = Application::where('allottee_id', $allottee->id)
+            ->where('application_type', $applicationType)
+            ->exists();
+
+        if ($existingApplication) {
+            return back()->with('error', 'You have already applied for this application.');
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $startingStep = WorkflowStep::where('workflow_id', $workflow->id)
+                ->orderBy('step_order', 'asc')
+                ->first();
+
+            $nextStep = $startingStep ? WorkflowStep::where('workflow_id', $workflow->id)
+                ->where('step_order', '>', $startingStep->step_order)
+                ->orderBy('step_order', 'asc')
+                ->first() : null;
+
+            // Find Target User based on division from adms_jshb database
+            $divisionId = $allottee->division_id;
+            $targetUserId = $nextStep ? \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('users')
+                ->where('role_id', $nextStep->role_id)
+                ->when($divisionId, function ($query) use ($divisionId) {
+                    return $query->where('division_id', $divisionId);
+                })
+                ->where('status', 1)
+                ->orderByDesc('is_default')
+                ->value('id') : null;
+
+            $applicationNo = 'APL-' . date('Y') . '-' . rand(12345678, 99999999);
+
+            $application = Application::create([
+                'application_no' => $applicationNo,
+                'application_type' => $applicationType,
+                'allottee_id' => $allottee->id,
+                'property_id' => $allottee->property_number ? 1 : 1, // dummy for now
+                'workflow_id' => $workflow->id,
+                'current_step_id' => $nextStep ? $nextStep->id : ($startingStep ? $startingStep->id : null),
+                'current_user_id' => $targetUserId,
+                'current_role_id' => $nextStep ? $nextStep->role_id : ($startingStep ? $startingStep->role_id : null),
+                'status' => 'in_progress',
+                'priority' => 'normal',
+                'created_date' => now(),
+                'remarks' => 'New ' . $applicationType . ' application initiated by allottee',
+                'created_by' => $user->id,
+            ]);
+
+            // Add Movement Log - First Row (Created)
+            ApplicationMovement::create([
+                'application_id' => $application->id,
+                'from_user_id' => null, // null because allottee is not a jshb internal user
+                'to_user_id' => null,
+                'from_role_id' => $user->role_id,
+                'to_role_id' => $startingStep ? $startingStep->role_id : null,
+                'from_step_id' => null,
+                'to_step_id' => $startingStep ? $startingStep->id : null,
+                'action_type' => 'created',
+                'status' => 'completed',
+                'remarks' => 'Application initiated by allottee.',
+                'movement_date' => now(),
+            ]);
+
+            // Add Movement Log - Second Row (Forwarded)
+            if ($startingStep && $nextStep) {
+                ApplicationMovement::create([
+                    'application_id' => $application->id,
+                    'from_user_id' => null, // null because allottee is not a jshb internal user
+                    'to_user_id' => $targetUserId,
+                    'from_role_id' => $startingStep->role_id,
+                    'to_role_id' => $nextStep->role_id,
+                    'from_step_id' => $startingStep->id,
+                    'to_step_id' => $nextStep->id,
+                    'action_type' => 'forwarded',
+                    'status' => 'pending',
+                    'remarks' => 'Application automatically forwarded to dealing assistant.',
+                    'movement_date' => now(),
+                ]);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return back()->with('success', 'Application submitted successfully.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("Application Creation failed: " . $e->getMessage());
+            return back()->with('error', 'Error creating application: ' . $e->getMessage());
         }
     }
 

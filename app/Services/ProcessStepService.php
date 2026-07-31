@@ -103,17 +103,17 @@ class ProcessStepService
                     ],
                     [
                         'order_key'    => 3,
-                        'sub_menu_key' => 'allotment-possession-letter',
-                        'title'        => 'Possession Letter',
-                        'icon'         => 'fa-solid fa-key',
-                        'blade'        => 'allotment-possession-letter',
-                    ],
-                    [
-                        'order_key'    => 4,
                         'sub_menu_key' => 'agreement-document-letter',
                         'title'        => 'Agreement',
                         'icon'         => 'fa-solid fa-key',
                         'blade'        => 'allotment-agreement-letter',
+                    ],
+                    [
+                        'order_key'    => 4,
+                        'sub_menu_key' => 'allotment-possession-letter',
+                        'title'        => 'Possession Letter',
+                        'icon'         => 'fa-solid fa-key',
+                        'blade'        => 'allotment-possession-letter',
                     ],
                 ],
             ],
@@ -388,8 +388,20 @@ class ProcessStepService
             $rows,
             ['allottee_id', 'menu_key', 'sub_menu_key'],
             [
-                'menu_order', 'step_order', 'route_name', 'process_group', 'icons', 'step_no', 'title',
-                'description', 'blade', 'status', 'is_active', 'meta', 'updated_by', 'updated_at'
+                'menu_order',
+                'step_order',
+                'route_name',
+                'process_group',
+                'icons',
+                'step_no',
+                'title',
+                'description',
+                'blade',
+                'status',
+                'is_active',
+                'meta',
+                'updated_by',
+                'updated_at'
             ]
         );
     }

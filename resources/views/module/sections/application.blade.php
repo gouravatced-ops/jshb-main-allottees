@@ -54,9 +54,66 @@
 @endif
 
 {{-- Application List --}}
-<div class="section-title">
-    <i class="fa-solid fa-file-signature me-2"></i>
-    My Applications
+<div class="section-title d-flex justify-content-between align-items-center">
+    <div>
+        <i class="fa-solid fa-file-signature me-2"></i>
+        My Applications
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#applyAgreementModal">
+        <i class="fa-solid fa-plus me-1"></i> Apply for Agreement
+    </button>
+</div>
+
+{{-- Apply for Agreement Modal --}}
+<div class="modal fade" id="applyAgreementModal" tabindex="-1" aria-labelledby="applyAgreementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="applyAgreementModalLabel">
+                    <i class="fa-solid fa-file-contract me-2"></i> Apply for Agreement
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('allottee.apply.application') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" name="application_type" value="agreement">
+                    
+                    <div class="alert alert-info">
+                        <strong><i class="fa-solid fa-circle-info me-1"></i> Application Process Information</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-dark">Estimated Time:</h6>
+                        <p class="text-muted small mb-0">
+                            The agreement processing typically takes <strong>7 to 15 working days</strong> upon successful submission and verification by the concerned authorities.
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-dark">Required Documents (May be requested):</h6>
+                        <ul class="text-muted small mb-0">
+                            <li>Valid Photo ID Proof (Aadhaar / PAN)</li>
+                            <li>Signed Allotment Letter</li>
+                            <li>Initial Payment Receipt (15% collection)</li>
+                            <li>Passport Size Photographs</li>
+                            <li>Affidavit (if applicable)</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-danger small mb-0">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Ensure all your basic details and payments are up to date before applying.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Confirm & Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">

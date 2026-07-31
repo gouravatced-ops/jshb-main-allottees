@@ -13,10 +13,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use App\Traits\DocumentUploadTrait;
 use NumberFormatter;
 
 class AllotteePaymentController extends Controller
 {
+    use DocumentUploadTrait;
+
     public function payInitialPayment(Request $request)
     {
         $request->validate([
@@ -81,7 +84,7 @@ class AllotteePaymentController extends Controller
 
             // GENERATE RECEIPT PDF
             $pdf = Pdf::loadView(
-                'admin.allottee.sections.initial-payment-receipt',
+                'module.sections.initial-payment-receipt',
                 compact(
                     'payment',
                     'transaction',
@@ -122,15 +125,53 @@ class AllotteePaymentController extends Controller
                 now()->format('YmdHis') . '-' .
                 rand(1000, 9999) .
                 '.pdf';
+            
+            $pdfContent = $pdf->output();
+            
             file_put_contents(
                 $directory . '/' . $fileName,
-                $pdf->output()
+                $pdfContent
             );
+
+            // 2. Upload to Document API
+            $allottee = $payment->allottee;
+            $scheme = $allottee->scheme ?? null;
+            $yyyy = date('Y');
+            $mm = date('m');
+            $dd = date('d');
+
+            $extraData = [
+                'application_for' => 'allotment',
+                'division_code' => $allottee->division->division_code ?? '',
+                'subdivision_code' => $allottee->subDivision->subdivision_code ?? '',
+                'property_category' => $allottee->propertyCategory->category_code ?? '',
+                'property_type' => $allottee->propertyType->type_code ?? '',
+                'property_income' => $allottee->quarterType->quarter_code ?? '',
+                'username' => $allottee->username ?? ''
+            ];
+
+            try {
+                $uploadResult = $this->uploadContentToDocumentApi(
+                    $pdfContent,
+                    $fileName,
+                    'FINAL',
+                    $scheme->scheme_code ?? 'SCH',
+                    $allottee->property_number ?? 'PROP',
+                    $yyyy,
+                    $mm,
+                    $dd,
+                    $extraData
+                );
+                $filePath = ltrim($uploadResult['file_path'], '/');
+            } catch (\Exception $e) {
+                Log::error('Document API Upload failed: ' . $e->getMessage());
+                $filePath = $folder . '/' . $fileName;
+            }
 
             // UPDATE TRANSACTION RECEIPT
             $transaction->update([
                 'receipt_file' => $fileName,
-                'receipt_path' => $folder . '/' . $fileName,
+                'receipt_path' => $filePath,
             ]);
 
             // SAVE GENERATED DOCUMENT
@@ -144,7 +185,7 @@ class AllotteePaymentController extends Controller
                 'file_name'      =>
                 $fileName,
                 'file_path'      =>
-                $folder . '/' . $fileName,
+                $filePath,
                 'generated_by'   =>
                 Auth::id(),
                 'generated_at'   =>
@@ -180,7 +221,7 @@ class AllotteePaymentController extends Controller
                     $folder . '/' . $fileName
                 ),
                 'redirect' => route(
-                    'admin.allottees.payment.success',
+                    'modules.payment.success',
                     $payment->id
                 )
             ]);
@@ -270,7 +311,7 @@ class AllotteePaymentController extends Controller
 
             // GENERATE RECEIPT PDF
             $pdf = Pdf::loadView(
-                'admin.allottee.sections.initial-payment-receipt',
+                'module.sections.initial-payment-receipt',
                 compact(
                     'payment',
                     'transaction',
@@ -311,15 +352,53 @@ class AllotteePaymentController extends Controller
                 now()->format('YmdHis') . '-' .
                 rand(1000, 9999) .
                 '.pdf';
+                
+            $pdfContent = $pdf->output();
+            
             file_put_contents(
                 $directory . '/' . $fileName,
-                $pdf->output()
+                $pdfContent
             );
+
+            // 2. Upload to Document API
+            $allottee = $payment->allottee;
+            $scheme = $allottee->scheme ?? null;
+            $yyyy = date('Y');
+            $mm = date('m');
+            $dd = date('d');
+
+            $extraData = [
+                'application_for' => 'one_time_payment',
+                'division_code' => $allottee->division->division_code ?? '',
+                'subdivision_code' => $allottee->subDivision->subdivision_code ?? '',
+                'property_category' => $allottee->propertyCategory->category_code ?? '',
+                'property_type' => $allottee->propertyType->type_code ?? '',
+                'property_income' => $allottee->quarterType->quarter_code ?? '',
+                'username' => $allottee->username ?? ''
+            ];
+
+            try {
+                $uploadResult = $this->uploadContentToDocumentApi(
+                    $pdfContent,
+                    $fileName,
+                    'FINAL',
+                    $scheme->scheme_code ?? 'SCH',
+                    $allottee->property_number ?? 'PROP',
+                    $yyyy,
+                    $mm,
+                    $dd,
+                    $extraData
+                );
+                $filePath = ltrim($uploadResult['file_path'], '/');
+            } catch (\Exception $e) {
+                Log::error('Document API Upload failed: ' . $e->getMessage());
+                $filePath = $folder . '/' . $fileName;
+            }
 
             // UPDATE TRANSACTION RECEIPT
             $transaction->update([
                 'receipt_file' => $fileName,
-                'receipt_path' => $folder . '/' . $fileName,
+                'receipt_path' => $filePath,
             ]);
 
             // SAVE GENERATED DOCUMENT
@@ -333,7 +412,7 @@ class AllotteePaymentController extends Controller
                 'file_name'      =>
                 $fileName,
                 'file_path'      =>
-                $folder . '/' . $fileName,
+                $filePath,
                 'generated_by'   =>
                 Auth::id(),
                 'generated_at'   =>
@@ -361,7 +440,7 @@ class AllotteePaymentController extends Controller
                     $folder . '/' . $fileName
                 ),
                 'redirect' => route(
-                    'admin.allottees.payment.success',
+                    'modules.payment.success',
                     $payment->id
                 )
             ]);
@@ -384,5 +463,13 @@ class AllotteePaymentController extends Controller
                 $e->getMessage()
             ], 500);
         }
+    }
+
+    public function paymentSuccess($id)
+    {
+        $payment = AllotteePaymentOrder::with('allottee')->findOrFail($id);
+        $transaction = AllotteeTransaction::where('order_id', $id)->where('payment_status', 'success')->first();
+
+        return view('module.payment.success', compact('payment', 'transaction'));
     }
 }

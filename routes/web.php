@@ -45,5 +45,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-scheme-details/{id}', [CommonController::class, 'getSchemeDetails']);
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::post('/document-requests/upload', [\App\Http\Controllers\DashboardController::class, 'uploadDocumentRequest'])->name('allottee.document-requests.upload');
+    Route::post('/apply-application', [\App\Http\Controllers\DashboardController::class, 'applyForApplication'])->name('allottee.apply.application');
+    
+    // Allottee Payment and Document Routes
+    Route::post('/initial-payment/pay', [\App\Http\Controllers\Admin\AllotteePaymentController::class, 'payInitialPayment'])->name('allottee.initial-payment.pay');
+    Route::post('/one-time-pay', [\App\Http\Controllers\Admin\AllotteePaymentController::class, 'payOnetimePayment'])->name('allottee.one-time-payment.pay');
+    Route::post('/signed/document/uploads', [\App\Http\Controllers\Admin\AllotteeController::class, 'signedDocumentUploads'])->name('allottee.signed.document.uploads');
+    Route::post('/emi-process-payment/{allottee}', [\App\Http\Controllers\Admin\AllotteeEmiController::class, 'processPayment'])->name('allottee.emi.process-payment');
+    
+    Route::get('/payment/success/{id}', [\App\Http\Controllers\Admin\AllotteePaymentController::class, 'paymentSuccess'])->name('modules.payment.success');
+
     Route::get('/{blade}', [\App\Http\Controllers\DashboardController::class, 'section'])->name('dashboard.section');
 });

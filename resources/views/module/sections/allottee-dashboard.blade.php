@@ -40,7 +40,16 @@
 
     @php
     $totalPaid = $allottee->allotteeTransaction()->where('payment_status', 'success')->sum('amount') ?? 0;
-    $outstandingDemand = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->sum('outstanding_amount') ?? 0;
+    
+    $outstandingPayment = \App\Models\AllotteePaymentOrder::where('allottee_id', $allottee->id)
+    ->where('order_type', 'allotment')
+    ->whereNotIn('order_status', ['paid', 'cancelled'])
+    ->first();
+    
+    $emiOutstanding = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->sum('outstanding_amount') ?? 0;
+    
+    $outstandingDemand = $outstandingPayment ? $outstandingPayment->total_payable : $emiOutstanding;
+    
     $totalDocuments = $allottee->documentData()->count() + $allottee->generatedDocument()->count();
 
     $nextEmi = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->orderBy('due_date', 'asc')->first();
@@ -130,10 +139,7 @@
     </div>
     @else
     @php
-    $outstandingPayment = \App\Models\AllotteePaymentOrder::where('allottee_id', $allottee->id)
-    ->where('order_type', 'allotment')
-    ->whereNotIn('order_status', ['paid', 'cancelled'])
-    ->first();
+    // $outstandingPayment is already calculated at the top
     @endphp
 
     @if($outstandingPayment)
@@ -240,13 +246,26 @@
                         @endphp
 
                         @forelse($dashboardNotifications as $notif)
-                        <div class="list-group-item p-3 {{ !$notif->is_read ? 'bg-light border-start border-4 border-warning' : 'border-bottom' }}">
-                            <div class="d-flex w-100 justify-content-between mb-1">
-                                <h6 class="mb-0 fw-bold text-dark">{{ $notif->subject }}</h6>
-                                <small class="text-muted" style="white-space: nowrap;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
+                            @if($loop->first)
+                            <div class="list-group-item p-3 mb-2 rounded shadow-sm border-0" style="background: linear-gradient(to right, #fff8e1, #ffffff); border-left: 5px solid #ffc107 !important; position: relative; margin-top: 5px;">
+                                <div style="position: absolute; top: -10px; right: 15px; background: #ffc107; color: #000; padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                    <i class="fa-solid fa-star me-1"></i> Latest
+                                </div>
+                                <div class="d-flex w-100 justify-content-between mb-1 mt-1">
+                                    <h6 class="mb-0 fw-bold" style="color: #b8860b;"><i class="fa-solid fa-bell-ring me-2"></i>{{ $notif->subject }}</h6>
+                                    <small class="text-muted" style="white-space: nowrap; font-weight: 500;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
+                                </div>
+                                <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
                             </div>
-                            <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
-                        </div>
+                            @else
+                            <div class="list-group-item p-3 {{ !$notif->is_read ? 'bg-light' : '' }}" style="{{ !$notif->is_read ? 'border-left: 4px solid #ffc107 !important; border-top: none; border-right: none; border-bottom: 1px solid rgba(0,0,0,.125);' : 'border-bottom: 1px solid rgba(0,0,0,.125); border-left: none; border-top: none; border-right: none;' }}">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold text-dark">{{ $notif->subject }}</h6>
+                                    <small class="text-muted" style="white-space: nowrap;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
+                                </div>
+                                <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
+                            </div>
+                            @endif
                         @empty
                         <div class="list-group-item p-4 text-center text-muted">
                             <i class="fa-regular fa-bell-slash fs-3 mb-2 opacity-50"></i>
@@ -256,6 +275,17 @@
                     </div>
                 </div>
             </div>
+            
+            <script>
+                window.calendarNotifications = [
+                    @foreach($dashboardNotifications as $notif)
+                    {
+                        date: "{{ $notif->created_at ? $notif->created_at->format('Y-m-d') : '' }}",
+                        subject: "{{ addslashes($notif->subject) }}"
+                    },
+                    @endforeach
+                ];
+            </script>
 
             <!-- Recent Transactions -->
             <div class="card border-0 mb-4" style="box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
@@ -443,6 +473,28 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Notification Modal -->
+<div class="modal fade" id="calendarNotifModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-dark border-0" style="background: #ffc107;">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-bell me-2"></i> Notifications on <span id="calendarNotifDate"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <ul class="list-group list-group-flush" id="calendarNotifList">
+                    <!-- Notifications will be injected here -->
+                </ul>
+            </div>
+            <div class="modal-footer bg-light border-top-0">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
