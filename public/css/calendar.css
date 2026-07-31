@@ -151,3 +151,45 @@
     color: #ffffff !important;
     box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
 }
+
+.day-cell.has-notification {
+    background-color: #fff8e1 !important;
+    color: #b8860b !important;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.day-cell.has-notification .notif-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #ffc107;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.day-cell.has-notification::after {
+    content: attr(data-notification);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: rgba(255, 193, 7, 0.95);
+    color: #000;
+    font-weight: bold;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.12s ease;
+    z-index: 20;
+}
+
+.day-cell.has-notification:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}

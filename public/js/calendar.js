@@ -24,6 +24,17 @@
 
     const holidayMap = new Map();
     holidays.forEach(h => holidayMap.set(h.date, h));
+    
+    // Notifications Map
+    const notificationMap = new Map();
+    if (window.calendarNotifications) {
+        window.calendarNotifications.forEach(n => {
+            if (!notificationMap.has(n.date)) {
+                notificationMap.set(n.date, []);
+            }
+            notificationMap.get(n.date).push(n);
+        });
+    }
 
     const monthYearDisplay = document.getElementById('monthYearDisplay');
     const daysGrid = document.getElementById('daysGrid');
@@ -76,6 +87,43 @@
                     cell.classList.add('holiday');
                     cell.style.backgroundColor = holiday.color || '#f0e6d0';
                     cell.setAttribute('data-holiday', holiday.title || 'Holiday');
+                    cell.title = holiday.title || 'Holiday';
+                }
+                
+                // Check for notifications
+                const notifs = notificationMap.get(dateKey);
+                if (notifs) {
+                    cell.classList.add('has-notification');
+                    cell.setAttribute('data-notification', notifs.length + ' Notification(s)');
+                    
+                    let notifDot = document.createElement('div');
+                    notifDot.className = 'notif-dot';
+                    cell.appendChild(notifDot);
+                    
+                    cell.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const modalEl = document.getElementById('calendarNotifModal');
+                        if (modalEl) {
+                            // Format date for display
+                            const dateObj = new Date(dateKey);
+                            const formattedDate = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+                            
+                            document.getElementById('calendarNotifDate').innerText = formattedDate;
+                            const list = document.getElementById('calendarNotifList');
+                            list.innerHTML = '';
+                            
+                            notifs.forEach(n => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item p-3 border-bottom';
+                                li.innerHTML = `<h6 class="mb-0 text-dark fw-bold"><i class="fa-solid fa-bell-ring me-2 text-warning"></i>${n.subject}</h6>`;
+                                list.appendChild(li);
+                            });
+                            
+                            // Initialize and show modal
+                            const modal = new bootstrap.Modal(modalEl);
+                            modal.show();
+                        }
+                    });
                 }
             }
             daysGrid.appendChild(cell);

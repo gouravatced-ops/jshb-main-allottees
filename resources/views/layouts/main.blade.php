@@ -146,12 +146,15 @@
 
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
+    <script src="{{ asset('js/allottee/dashboard.js') }}"></script>
     <script src="{{ asset('js/fieldvalidation.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
         // Sparkline helper
         function sparkline(id, data, color) {
-            new Chart(document.getElementById(id), {
+            const el = document.getElementById(id);
+            if (!el) return;
+            new Chart(el, {
                 type: 'line',
                 data: {
                     labels: data.map((_, i) => i),
@@ -192,118 +195,124 @@
         sparkline('sparkline4', [30, 35, 32, 40, 38, 44, 42, 48, 45, 50, 48, 54], '#0f1b2d');
 
         // Transactions line chart
-        new Chart(document.getElementById('txnChart'), {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Amount (in Cr)',
-                    data: [13, 19, 9, 25, 23, 31, 30, 43, 42, 38, 45, 55],
-                    borderColor: '#1a7a4a',
-                    backgroundColor: 'rgba(26,122,74,0.08)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#1a7a4a',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            boxWidth: 10,
-                            font: {
-                                size: 11
-                            },
-                            color: '#6b7a8d'
-                        }
-                    }
+        const txnChartEl = document.getElementById('txnChart');
+        if (txnChartEl) {
+            new Chart(txnChartEl, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Amount (in Cr)',
+                        data: [13, 19, 9, 25, 23, 31, 30, 43, 42, 38, 45, 55],
+                        borderColor: '#1a7a4a',
+                        backgroundColor: 'rgba(26,122,74,0.08)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#1a7a4a',
+                        fill: true,
+                        tension: 0.3
+                    }]
                 },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 10
-                            },
-                            color: '#6b7a8d'
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                boxWidth: 10,
+                                font: {
+                                    size: 11
+                                },
+                                color: '#6b7a8d'
+                            }
                         }
                     },
-                    y: {
-                        grid: {
-                            color: '#f0f2f5'
-                        },
-                        ticks: {
-                            font: {
-                                size: 10
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
                             },
-                            color: '#6b7a8d'
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                color: '#6b7a8d'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f0f2f5'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                color: '#6b7a8d'
+                            }
                         }
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: true
-            }
-        });
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
 
         // Allottees bar chart
-        new Chart(document.getElementById('allotChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Allottees',
-                    data: [310, 290, 420, 300, 300, 340, 295, 300, 420, 300, 295, 550],
-                    backgroundColor: '#0f1b2d',
-                    borderRadius: 1,
-                    barThickness: 14
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            boxWidth: 10,
-                            font: {
-                                size: 11
-                            },
-                            color: '#6b7a8d'
-                        }
-                    }
+        const allotChartEl = document.getElementById('allotChart');
+        if (allotChartEl) {
+            new Chart(allotChartEl, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Allottees',
+                        data: [310, 290, 420, 300, 300, 340, 295, 300, 420, 300, 295, 550],
+                        backgroundColor: '#0f1b2d',
+                        borderRadius: 1,
+                        barThickness: 14
+                    }]
                 },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 10
-                            },
-                            color: '#6b7a8d'
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                boxWidth: 10,
+                                font: {
+                                    size: 11
+                                },
+                                color: '#6b7a8d'
+                            }
                         }
                     },
-                    y: {
-                        grid: {
-                            color: '#f0f2f5'
-                        },
-                        ticks: {
-                            font: {
-                                size: 10
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
                             },
-                            color: '#6b7a8d'
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                color: '#6b7a8d'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f0f2f5'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                color: '#6b7a8d'
+                            }
                         }
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: true
-            }
-        });
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -149,17 +149,17 @@ class AllotteeController extends Controller
                     ],
                     [
                         'order_key'    => 3,
-                        'sub_menu_key' => 'allotment-possession-letter',
-                        'title'        => 'Possession Letter',
-                        'icon'         => 'fa-solid fa-key',
-                        'blade'        => 'allotment-possession-letter',
-                    ],
-                    [
-                        'order_key'    => 4,
                         'sub_menu_key' => 'agreement-document-letter',
                         'title'        => 'Agreement',
                         'icon'         => 'fa-solid fa-key',
                         'blade'        => 'allotment-agreement-letter',
+                    ],
+                    [
+                        'order_key'    => 4,
+                        'sub_menu_key' => 'allotment-possession-letter',
+                        'title'        => 'Possession Letter',
+                        'icon'         => 'fa-solid fa-key',
+                        'blade'        => 'allotment-possession-letter',
                     ],
                 ],
             ],
@@ -256,7 +256,7 @@ class AllotteeController extends Controller
                 ],
             ],
 
-            
+
             // NOC
             [
                 'order_key'   => 9,
@@ -1199,7 +1199,7 @@ class AllotteeController extends Controller
                         'created_by'            => Auth::id(),
                     ]
                 );
- 
+
                 // Generate first demand only if no demands exist
                 if (!$emiAccount->demands()->exists()) {
                     app(EmiCalculatorService::class)->generateFirstDemand($emiAccount);

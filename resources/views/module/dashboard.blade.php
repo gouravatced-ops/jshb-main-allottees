@@ -22,6 +22,19 @@
         </div>
     </main>
 
+    <script>
+        window.AppConfig = {
+            routes: {
+                overview: '{{ route('dashboard') }}',
+                process: '{{ url('/') }}/step-__STEP__',
+                initialPayment: '{{ route('allottee.initial-payment.pay') }}',
+                oneTimePayment: '{{ route('allottee.one-time-payment.pay') }}',
+                uploadSigned: '{{ route('allottee.signed.document.uploads') }}',
+                emiProcessPayment: '{{ isset($allottee) ? route('allottee.emi.process-payment', ['allottee' => $allottee->id]) : '' }}',
+            },
+            currentStepNo: '{{ isset($step) ? $step->step_no : 1 }}'
+        };
+    </script>
 @endsection
 
 

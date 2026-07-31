@@ -18,73 +18,73 @@
 
     <div class="letter-grid">
         @foreach ($allottee->generatedDocument as $key => $document)
-            @php
-                $isSigned = !empty($document->signed_file_path);
-                $isGenerated = !$isSigned && !empty($document->file_path);
-                $documentType = $document->document_type;
+        @php
+        $isSigned = !empty($document->signed_file_path);
+        $isGenerated = !$isSigned && !empty($document->file_path);
+        $documentType = $document->document_type;
 
-                $filePath = $isSigned ? $document->signed_file_path : $document->file_path;
-                $statusLabel = '';
-                $subTitle = '';
-                if ($documentType == 'agreement') {
-                    $statusLabel = 'Uploaded';
-                    $subTitle = 'Document Uploaded By Admin';
-                } else {
-                    $statusLabel = $isSigned ? 'Signed' : 'Generated';
-                    $subTitle = $isSigned ? 'Your signed document is available' : 'Signed Document Uploded';
-                }
-            @endphp
+        $filePath = $isSigned ? $document->signed_file_path : $document->file_path;
+        $statusLabel = '';
+        $subTitle = '';
+        if ($documentType == 'agreement') {
+        $statusLabel = 'Uploaded';
+        $subTitle = 'Document Uploaded By Admin';
+        } else {
+        $statusLabel = $isSigned ? 'Signed' : 'Generated';
+        $subTitle = $isSigned ? 'Your signed document is available' : 'Signed Document Uploded';
+        }
+        @endphp
 
-            <div class="letter-hero letter-hero{{ $key + 1 }}">
+        <div class="letter-hero letter-hero{{ $key + 1 }}">
 
-                <p class="letter-hero-title">
-                    <i class="fa-solid fa-envelope-open-text me-2"></i>
+            <p class="letter-hero-title">
+                <i class="fa-solid fa-envelope-open-text me-2"></i>
 
-                    {{ ucwords($document->document_name) }}
+                {{ ucwords($document->document_name) }}
 
-                    <span class="badge bg-dark ms-2">
-                        {{ $statusLabel }}
-                    </span>
-                </p>
+                <span class="badge bg-dark ms-2">
+                    {{ $statusLabel }}
+                </span>
+            </p>
 
-                <p class="letter-hero-sub">
-                    {{ $subTitle }}
-                </p>
+            <p class="letter-hero-sub">
+                {{ $subTitle }}
+            </p>
 
-                <div class="app-no">
-                    {{ $allottee->application_no ?? 'N/A' }}
-                </div>
+            <div class="app-no">
+                {{ $allottee->application_no ?? 'N/A' }}
+            </div>
 
-                <div
-                    style="
+            <div
+                style="
                     display:flex;
                     gap:10px;
                     margin-top:18px;
                     flex-wrap:nowrap;
                 ">
 
-                    <!-- VIEW -->
-                    <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/') }}" target="_blank" class="btn-brand"
-                        style="
+                <!-- VIEW -->
+                <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/') }}" target="_blank" class="btn-brand"
+                    style="
                             background:rgba(255,255,255,.2);
                             border:1.5px solid rgba(255,255,255,.4)
                         ">
-                        <i class="fa-solid fa-eye"></i>
-                        View
-                    </a>
+                    <i class="fa-solid fa-eye"></i>
+                    View
+                </a>
 
-                    <!-- DOWNLOAD -->
-                    <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/') }}" download class="btn-brand"
-                        style="
+                <!-- DOWNLOAD -->
+                <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/') }}" download class="btn-brand"
+                    style="
                     background:rgba(255,255,255,.95);
                     color:var(--brand)
                 ">
-                        <i class="fa-solid fa-download"></i>
-                        Download
-                    </a>
+                    <i class="fa-solid fa-download"></i>
+                    Download
+                </a>
 
-                </div>
             </div>
+        </div>
         @endforeach
     </div>
 </div>

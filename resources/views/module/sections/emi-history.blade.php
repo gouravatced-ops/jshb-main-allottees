@@ -2,32 +2,32 @@
 
 @php
 
-    $transactions = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
-        ->whereIn('transaction_type', ['emi_payment', 'penalty_payment', 'extra_payment', 'one_time_payment'])
-        ->latest('paid_at')
-        ->paginate(20);
+$transactions = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
+->whereIn('transaction_type', ['emi_payment', 'penalty_payment', 'extra_payment', 'one_time_payment'])
+->latest('paid_at')
+->paginate(20);
 
-    $totalPaid = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
-        ->where('payment_status', 'success')
-        ->where('transaction_type', 'emi_payment')
-        ->sum('total_amount');
+$totalPaid = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
+->where('payment_status', 'success')
+->where('transaction_type', 'emi_payment')
+->sum('total_amount');
 
-    $totalEmiPaid = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
-        ->where('transaction_type', 'emi_payment')
-        ->where('payment_status', 'success')
-        ->count();
+$totalEmiPaid = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
+->where('transaction_type', 'emi_payment')
+->where('payment_status', 'success')
+->count();
 
-    $lastPayment = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
-        ->where('payment_status', 'success')
-        ->latest('paid_at')
-        ->first();
+$lastPayment = \App\Models\AllotteeTransaction::where('allottee_id', $allottee->id)
+->where('payment_status', 'success')
+->latest('paid_at')
+->first();
 
-    // Get demand details for each transaction
-    foreach ($transactions as $txn) {
-        if ($txn->demand_id) {
-            $txn->demand = \App\Models\AllotteeMonthlyDemand::find($txn->demand_id);
-        }
-    }
+// Get demand details for each transaction
+foreach ($transactions as $txn) {
+if ($txn->demand_id) {
+$txn->demand = \App\Models\AllotteeMonthlyDemand::find($txn->demand_id);
+}
+}
 
 @endphp
 
@@ -84,9 +84,9 @@
                 <p class="info-card-value">
 
                     @if ($lastPayment)
-                        {{ \Carbon\Carbon::parse($lastPayment->paid_at)->format('d-m-Y') }}
+                    {{ \Carbon\Carbon::parse($lastPayment->paid_at)->format('d-m-Y') }}
                     @else
-                        —
+                    —
                     @endif
 
                 </p>
@@ -153,176 +153,176 @@
                     <tbody>
 
                         @forelse($transactions as $key => $txn)
-                            <tr>
+                        <tr>
 
-                                <td>
-                                    {{ $transactions->firstItem() + $key }}
-                                </td>
+                            <td>
+                                {{ $transactions->firstItem() + $key }}
+                            </td>
 
-                                <td>
-                                    <strong>
-                                        {{ $txn->transaction_no ?? '-' }}
-                                    </strong>
-                                </td>
+                            <td>
+                                <strong>
+                                    {{ $txn->transaction_no ?? '-' }}
+                                </strong>
+                            </td>
 
-                                <td>
-                                    @if ($txn->demand_id && isset($txn->demand))
-                                        EMI-{{ str_pad($txn->demand->emi_no, 2, '0', STR_PAD_LEFT) }}
-                                    @else
-                                        —
-                                    @endif
-                                </td>
+                            <td>
+                                @if ($txn->demand_id && isset($txn->demand))
+                                EMI-{{ str_pad($txn->demand->emi_no, 2, '0', STR_PAD_LEFT) }}
+                                @else
+                                —
+                                @endif
+                            </td>
 
-                                <td>
+                            <td>
 
-                                    @switch($txn->transaction_type)
-                                        @case('emi_payment')
-                                            <span class="badge bg-primary">
-                                                EMI
-                                            </span>
-                                        @break
+                                @switch($txn->transaction_type)
+                                @case('emi_payment')
+                                <span class="badge bg-primary">
+                                    EMI
+                                </span>
+                                @break
 
-                                        @case('penalty_payment')
-                                            <span class="badge bg-danger">
-                                                Penalty
-                                            </span>
-                                        @break
+                                @case('penalty_payment')
+                                <span class="badge bg-danger">
+                                    Penalty
+                                </span>
+                                @break
 
-                                        @case('extra_payment')
-                                            <span class="badge bg-info">
-                                                Pre-Payment
-                                            </span>
-                                        @break
+                                @case('extra_payment')
+                                <span class="badge bg-info">
+                                    Pre-Payment
+                                </span>
+                                @break
 
-                                        @case('one_time_payment')
-                                            <span class="badge bg-success">
-                                                One Time
-                                            </span>
-                                        @break
+                                @case('one_time_payment')
+                                <span class="badge bg-success">
+                                    One Time
+                                </span>
+                                @break
 
-                                        @default
-                                            <span class="badge bg-secondary">
-                                                Other
-                                            </span>
-                                    @endswitch
+                                @default
+                                <span class="badge bg-secondary">
+                                    Other
+                                </span>
+                                @endswitch
 
-                                </td>
+                            </td>
 
-                                <td>
-                                    ₹ {{ number_format($txn->principal_amount, 2) }}
-                                </td>
+                            <td>
+                                ₹ {{ number_format($txn->principal_amount, 2) }}
+                            </td>
 
-                                <td>
-                                    ₹ {{ number_format($txn->interest_amount, 2) }}
-                                </td>
+                            <td>
+                                ₹ {{ number_format($txn->interest_amount, 2) }}
+                            </td>
 
-                                <td class="text-danger">
-                                    ₹ {{ number_format($txn->penalty_amount, 2) }}
-                                </td>
+                            <td class="text-danger">
+                                ₹ {{ number_format($txn->penalty_amount, 2) }}
+                            </td>
 
-                                <td>
-                                    ₹ {{ number_format($txn->admin_charge, 2) }}
-                                </td>
+                            <td>
+                                ₹ {{ number_format($txn->admin_charge, 2) }}
+                            </td>
 
-                                <td>
-                                    <strong>
-                                        ₹ {{ number_format($txn->total_amount, 2) }}
-                                    </strong>
-                                </td>
+                            <td>
+                                <strong>
+                                    ₹ {{ number_format($txn->total_amount, 2) }}
+                                </strong>
+                            </td>
 
-                                <td>
-                                    {{ strtoupper($txn->payment_mode ?? '-') }}
-                                </td>
+                            <td>
+                                {{ strtoupper($txn->payment_mode ?? '-') }}
+                            </td>
 
-                                <td>
+                            <td>
 
-                                    @switch($txn->payment_status)
-                                        @case('success')
-                                            <span class="badge bg-success">
-                                                Success
-                                            </span>
-                                        @break
+                                @switch($txn->payment_status)
+                                @case('success')
+                                <span class="badge bg-success">
+                                    Success
+                                </span>
+                                @break
 
-                                        @case('failed')
-                                            <span class="badge bg-danger">
-                                                Failed
-                                            </span>
-                                        @break
+                                @case('failed')
+                                <span class="badge bg-danger">
+                                    Failed
+                                </span>
+                                @break
 
-                                        @case('refunded')
-                                            <span class="badge bg-warning text-dark">
-                                                Refunded
-                                            </span>
-                                        @break
+                                @case('refunded')
+                                <span class="badge bg-warning text-dark">
+                                    Refunded
+                                </span>
+                                @break
 
-                                        @default
-                                            <span class="badge bg-secondary">
-                                                Initiated
-                                            </span>
-                                    @endswitch
+                                @default
+                                <span class="badge bg-secondary">
+                                    Initiated
+                                </span>
+                                @endswitch
 
-                                </td>
+                            </td>
 
-                                <td>
+                            <td>
 
-                                    @if ($txn->paid_at)
-                                        {{ \Carbon\Carbon::parse($txn->paid_at)->format('d-m-Y h:i A') }}
-                                    @else
-                                        —
-                                    @endif
+                                @if ($txn->paid_at)
+                                {{ \Carbon\Carbon::parse($txn->paid_at)->format('d-m-Y h:i A') }}
+                                @else
+                                —
+                                @endif
 
-                                </td>
+                            </td>
 
-                                <td>
+                            <td>
 
-                                    @if ($txn->receipt_path)
-                                        <a href="{{ rtrim(env('DOC_SERVER_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/') }}" target="_blank"
-                                            class="btn btn-sm btn-outline-primary">
+                                @if ($txn->receipt_path)
+                                <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/') }}" target="_blank"
+                                    class="btn btn-sm btn-outline-primary">
 
-                                            <i class="fa-solid fa-file-pdf"></i>
+                                    <i class="fa-solid fa-file-pdf"></i>
 
-                                        </a>
-                                    @else
-                                        —
-                                    @endif
+                                </a>
+                                @else
+                                —
+                                @endif
 
-                                </td>
+                            </td>
 
-                            </tr>
+                        </tr>
 
-                            @empty
+                        @empty
 
-                                <tr>
+                        <tr>
 
-                                    <td colspan="13" class="text-center py-5">
+                            <td colspan="13" class="text-center py-5">
 
-                                        <i class="fa-solid fa-clock-rotate-left fa-2x mb-2 text-muted"></i>
+                                <i class="fa-solid fa-clock-rotate-left fa-2x mb-2 text-muted"></i>
 
-                                        <br>
+                                <br>
 
-                                        No EMI payment history found.
+                                No EMI payment history found.
 
-                                    </td>
+                            </td>
 
-                                </tr>
-                            @endforelse
+                        </tr>
+                        @endforelse
 
-                        </tbody>
+                    </tbody>
 
-                    </table>
-
-                </div>
+                </table>
 
             </div>
 
-            @if ($transactions->count())
-                <div class="card-footer">
-
-                    {{ $transactions->links() }}
-
-                </div>
-            @endif
-
         </div>
 
+        @if ($transactions->count())
+        <div class="card-footer">
+
+            {{ $transactions->links() }}
+
+        </div>
+        @endif
+
     </div>
+
+</div>
