@@ -15,7 +15,7 @@
 @php
 $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
 'allottee_id' => $allottee->id,
-'document_type' => 'agreement',
+'document_type' => 'agreement-letter',
 ])
 ->latest()
 ->first();
@@ -66,24 +66,71 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
             Download Signed Copy
         </a>
         @else
-        {{-- VIEW UPLOAD LETTER --}}
+        {{-- VIEW GENERATED LETTER --}}
         <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" target="_blank" class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
                     ">
             <i class="fa-solid fa-eye"></i>
-            View Uploaded Copy
+            View Generated Agreement
         </a>
-        {{-- DOWNLOAD UPLOAD LETTER --}}
+        {{-- DOWNLOAD GENERATED LETTER --}}
         <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" download class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
                     ">
             <i class="fa-solid fa-download"></i>
-            Download Uploaded Copy
+            Download Generated Agreement
         </a>
+
+        @if (isset($pendingApplication) && $pendingApplication->currentStep && $pendingApplication->currentStep->step_code === 'agreement-allottee-upload')
+        {{-- UPLOAD SIGNED COPY --}}
+        <button type="button" class="btn-brand" style="background:#28a745; color:white; border: none;" onclick="openReuploadModal()">
+            <i class="fa-solid fa-upload"></i>
+            Upload Signed Agreement
+        </button>
+
+        <!-- Upload Signed Agreement Modal -->
+        <div class="modal fade" id="reuploadConfirmModal" tabindex="-1" aria-labelledby="reuploadConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div class="modal-header" style="background: #f8f9fa; border-bottom: 1px solid #eaeaea; border-radius: 12px 12px 0 0;">
+                        <h5 class="modal-title" id="reuploadConfirmModalLabel" style="font-weight: 600; color: #333;"><i class="fa-solid fa-file-signature text-primary me-2"></i> Upload Signed Agreement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('allottee.applications.upload-signed-agreement', $pendingApplication->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-body" style="padding: 20px;">
+                            <div class="alert alert-warning" style="background: #fff3cd; border-color: #ffecb5; color: #664d03; border-radius: 8px;">
+                                <strong><i class="fa-solid fa-circle-exclamation"></i> Instructions:</strong> Please download the generated agreement, sign it physically or digitally, and upload the scanned copy below.
+                            </div>
+                            
+                            <div class="mb-3 mt-4">
+                                <label for="signed_agreement_file" class="form-label" style="font-weight: 600; color: #495057;">Select Signed File (PDF only) <span class="text-danger">*</span></label>
+                                <input class="form-control" type="file" id="signed_agreement_file" name="signed_agreement_file" accept=".pdf" required style="padding: 10px; border-radius: 6px;">
+                                <div class="form-text mt-2"><i class="fa-solid fa-circle-info text-info"></i> Max file size: 5MB. Ensure signatures are clearly visible.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #eaeaea;">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-weight: 500; border-radius: 6px;">Cancel</button>
+                            <button type="submit" class="btn btn-success" style="font-weight: 500; border-radius: 6px; background: #28a745;"><i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload & Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openReuploadModal() {
+                var myModal = new bootstrap.Modal(document.getElementById('reuploadConfirmModal'), {
+                    keyboard: false
+                });
+                myModal.show();
+            }
+        </script>
+        @endif
         @endif
         @else
         @if ($pendingApplication && $pendingApplication->application_type === 'agreement')

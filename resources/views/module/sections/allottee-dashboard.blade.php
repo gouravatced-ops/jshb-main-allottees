@@ -83,7 +83,13 @@
                         </div>
                     </div>
                     <div>
-                        <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 13px; font-weight: 600;">Processing</span>
+                        @if ($pendingApplication->currentStep && $pendingApplication->currentStep->step_code === 'agreement-allottee-upload')
+                            <a href="{{ route('dashboard.section', 'application') }}" class="btn btn-success fw-bold px-3 py-2">
+                                <i class="fa-solid fa-file-signature me-1"></i> Download & Upload Agreement
+                            </a>
+                        @else
+                            <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 13px; font-weight: 600;">Processing</span>
+                        @endif
                     </div>
                 </div>
             </div>

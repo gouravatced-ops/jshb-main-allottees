@@ -19,6 +19,7 @@ use App\Models\DocumentRequest;
 use App\Models\Workflow;
 use App\Models\WorkflowStep;
 use App\Models\ApplicationMovement;
+use App\Models\ApplicationAuditTrail;
 use App\Traits\DocumentUploadTrait;
 
 class DashboardController extends Controller
@@ -210,7 +211,7 @@ class DashboardController extends Controller
             $response = \Illuminate\Support\Facades\Http::withToken(env('DOC_API_TOKEN'))
                 ->withHeaders(['X-API-KEY' => env('DOC_API_TOKEN')])
                 ->attach('file', file_get_contents($request->file('document_file')), $request->file('document_file')->getClientOriginalName())
-                ->post(env('DOC_API_URL'), $apiPayload);
+                ->post(env('DOC_UPLOAD_API_URL'), $apiPayload);
 
             \Illuminate\Support\Facades\Log::info("Document Request Upload API Response Status: " . $response->status());
             \Illuminate\Support\Facades\Log::info("Document Request Upload API Response Body: " . $response->body());
@@ -255,6 +256,138 @@ class DashboardController extends Controller
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Document Request Upload failed: " . $e->getMessage());
+            return back()->with('error', 'Error uploading document: ' . $e->getMessage());
+        }
+    }
+
+    public function uploadSignedAgreement(Request $request, $applicationId)
+    {
+        $request->validate([
+            'signed_agreement_file' => 'required|file|max:5120|mimes:pdf',
+        ]);
+
+        $user = Auth::user();
+        $allottee = Allottee::where('user_id', $user->id)->first();
+        if (!$allottee) {
+            return back()->with('error', 'Allottee profile not found.');
+        }
+
+        $application = Application::where('id', $applicationId)
+            ->where('allottee_id', $allottee->id)
+            ->first();
+
+        if (!$application) {
+            return back()->with('error', 'Application not found.');
+        }
+
+        // Prepare data for API
+        $category = 'APPLICATION';
+        $schemeCode = $allottee->scheme->scheme_code ?? 'SCH';
+        $propertyNumber = $allottee->property_number ?? 'PROP';
+        $yyyy = date('Y');
+        $mm = date('m');
+        $dd = date('d');
+
+        $extraData = [
+            'username'          => $user->username ?? '',
+            'division_code'     => $allottee->division->division_code ?? '',
+            'subdivision_code'  => $allottee->subDivision->subdivision_code ?? '',
+            'property_category' => $allottee->propertyCategory->category_code ?? '',
+            'property_type'     => $allottee->propertyType->type_code ?? '',
+            'property_income'   => $allottee->quarterType->quarter_code ?? '',
+            'application_for'   => $application->application_type ?? '',
+        ];
+
+        try {
+            $uploadResult = $this->uploadToDocumentApi(
+                $request->file('signed_agreement_file'),
+                'APPLICATION',
+                $schemeCode,
+                $propertyNumber,
+                $yyyy,
+                $mm,
+                $dd,
+                null,
+                $extraData
+            );
+
+            $receiptPath = $uploadResult['file_path'];
+
+                // Save to ApplicationDocument
+                \App\Models\ApplicationDocument::create([
+                    'application_id' => $application->id,
+                    'movement_id'    => null,
+                    'document_type'  => 'SIGNED_AGREEMENT',
+                    'document_name'  => 'Signed Agreement',
+                    'file_name'      => basename($receiptPath),
+                    'file_path'      => $receiptPath,
+                    'file_size'      => $request->file('signed_agreement_file')->getSize(),
+                    'file_mime_type' => $request->file('signed_agreement_file')->getMimeType(),
+                    'uploaded_by'    => $user->id,
+                    'uploader_type'  => 'Allottee',
+                    'uploaded_at'    => now(),
+                ]);
+
+                // Forward the Application
+                $currentStep = $application->currentStep;
+                if ($currentStep) {
+                    $nextStep = \App\Models\WorkflowStep::where('workflow_id', $currentStep->workflow_id)
+                        ->where('step_order', '>', $currentStep->step_order)
+                        ->orderBy('step_order', 'asc')
+                        ->first();
+                        
+                    if ($nextStep) {
+                        $application->current_step_id = $nextStep->id;
+                        $application->current_role_id = $nextStep->role_id;
+                        $application->status = 'pending';
+
+                        // Find Target User based on division
+                        $divisionId = $allottee->division_id ?? null;
+                        $targetUserQuery = User::on('adms_jshb')->where('role_id', $nextStep->role_id)->where('status', 1);
+
+                        if ($divisionId) {
+                            $targetUser = (clone $targetUserQuery)->where('division_id', $divisionId)->first();
+                            if (!$targetUser) {
+                                $targetUser = $targetUserQuery->first();
+                            }
+                        } else {
+                            $targetUser = $targetUserQuery->first();
+                        }
+                        $application->current_user_id = $targetUser ? $targetUser->id : null;
+                        $application->save();
+
+                        ApplicationMovement::create([
+                            'application_id' => $application->id,
+                            'from_user_id' => null, // Allottee has no adms_jshb.users record
+                            'to_user_id' => $application->current_user_id,
+                            'from_role_id' => $currentStep->role_id,
+                            'to_role_id' => $nextStep->role_id,
+                            'from_step_id' => $currentStep->id,
+                            'to_step_id' => $nextStep->id,
+                            'action_type' => 'forwarded',
+                            'status' => 'pending',
+                            'remarks' => 'Signed agreement uploaded by Allottee',
+                            'movement_date' => now(),
+                        ]);
+
+                        if ($application->current_user_id) {
+                            app(\App\Services\NotificationService::class)->send([
+                                'user_id' => $application->current_user_id,
+                                'notification_type' => 'application_movement',
+                                'subject' => 'Signed Agreement Uploaded',
+                                'message' => "The allottee ({$user->name}) has uploaded their signed agreement for application {$application->application_no}. It is now forwarded to you for verification.",
+                                'send_email' => true,
+                                'send_sms' => false,
+                                'send_whatsapp' => false,
+                                'link' => null
+                            ]);
+                        }
+                    }
+                }
+
+                return back()->with('success', 'Signed Agreement uploaded successfully. The application has been forwarded to the department.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Signed Agreement Upload failed: " . $e->getMessage());
             return back()->with('error', 'Error uploading document: ' . $e->getMessage());
         }
     }
@@ -346,6 +479,24 @@ class DashboardController extends Controller
                 'movement_date' => now(),
             ]);
 
+            // Audit Trail for Application Creation
+            ApplicationAuditTrail::create([
+                'application_id' => $application->id,
+                'user_id' => $user->id,
+                'role_id' => $user->role_id ?? null,
+                'action' => 'apply',
+                'module' => 'Application Workflow',
+                'description' => 'Application initiated by allottee.',
+                'old_data' => [],
+                'new_data' => [
+                    'step_id' => $startingStep ? $startingStep->id : null,
+                    'role_id' => $startingStep ? $startingStep->role_id : null,
+                    'action_type' => 'created',
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+
             // Add Movement Log - Second Row (Forwarded)
             if ($startingStep && $nextStep) {
                 ApplicationMovement::create([
@@ -360,6 +511,27 @@ class DashboardController extends Controller
                     'status' => 'pending',
                     'remarks' => 'Application automatically forwarded to dealing assistant.',
                     'movement_date' => now(),
+                ]);
+
+                // Audit Trail for Auto-Forward
+                ApplicationAuditTrail::create([
+                    'application_id' => $application->id,
+                    'user_id' => $user->id, // Allottee triggered this
+                    'role_id' => null,
+                    'action' => 'forward',
+                    'module' => 'Application Workflow',
+                    'description' => 'Application automatically forwarded to dealing assistant.',
+                    'old_data' => [
+                        'step_id' => $startingStep->id,
+                        'role_id' => $startingStep->role_id,
+                    ],
+                    'new_data' => [
+                        'step_id' => $nextStep->id,
+                        'role_id' => $nextStep->role_id,
+                        'action_type' => 'forwarded',
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent()
                 ]);
             }
 

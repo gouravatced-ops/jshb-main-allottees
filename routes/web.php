@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::post('/document-requests/upload', [\App\Http\Controllers\DashboardController::class, 'uploadDocumentRequest'])->name('allottee.document-requests.upload');
     Route::post('/apply-application', [\App\Http\Controllers\DashboardController::class, 'applyForApplication'])->name('allottee.apply.application');
+    Route::post('/applications/{application}/upload-signed-agreement', [\App\Http\Controllers\DashboardController::class, 'uploadSignedAgreement'])->name('allottee.applications.upload-signed-agreement');
     
     // Allottee Payment and Document Routes
     Route::post('/initial-payment/pay', [\App\Http\Controllers\Admin\AllotteePaymentController::class, 'payInitialPayment'])->name('allottee.initial-payment.pay');

@@ -107,7 +107,7 @@
                                 @if ($payment->receipt_path)
                                     @php
                                         $extension = pathinfo($payment->receipt_path, PATHINFO_EXTENSION);
-                                        $docBaseUrl = rtrim(str_replace(['api/upload.php', '/api/upload.php'], '', env('DOC_API_URL', '')), '/');
+                                        $docBaseUrl = rtrim(env('DOC_API_URL', ''), '/');
                                         $previewSrc = !empty($payment->receipt_path) ? $docBaseUrl . '/' . ltrim($payment->receipt_path, '/') : '';
                                     @endphp
                                     <a href="{{ $previewSrc }}" target="_blank"
