@@ -42,11 +42,21 @@ class NotificationService
         $emailId = $params['email_id'] ?? null;
         $phoneNumber = $params['phone_number'] ?? null;
 
+        $isAllottee = $params['is_allottee'] ?? true;
+
         if ($userId && (!$emailId || !$phoneNumber)) {
-            $user = User::find($userId);
-            if ($user) {
-                if (!$emailId) $emailId = $user->email;
-                if (!$phoneNumber) $phoneNumber = $user->phone ?? $user->mobile ?? ''; // Adjust based on DB structure
+            if ($isAllottee) {
+                $user = User::find($userId);
+                if ($user) {
+                    if (!$emailId) $emailId = $user->email;
+                    if (!$phoneNumber) $phoneNumber = $user->phone ?? $user->mobile ?? '';
+                }
+            } else {
+                $user = \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('users')->where('id', $userId)->first();
+                if ($user) {
+                    if (!$emailId) $emailId = $user->email;
+                    if (!$phoneNumber) $phoneNumber = $user->phone ?? $user->mobile ?? '';
+                }
             }
         }
 
@@ -74,11 +84,14 @@ class NotificationService
                 $isEmailSent = true;
                 $emailSentAt = now();
                 Log::channel('send_mail')->info("Email sent to {$emailId} | Subject: {$subject}");
+                $this->logCommunication($userId, 'email', $subject, $message, 'success', null, $params);
             } catch (\Exception $e) {
                 Log::channel('send_mail')->error("Failed to send Email to {$emailId} | Error: " . $e->getMessage());
+                $this->logCommunication($userId, 'email', $subject, $message, 'failed', $e->getMessage(), $params);
             }
         } elseif ($sendEmail) {
             Log::channel('send_mail')->warning("Skipped Email sending: Invalid or missing email address for User ID: {$userId}");
+            $this->logCommunication($userId, 'email', $subject, $message, 'failed', 'Invalid or missing email address', $params);
         }
 
         // 2. Send SMS
@@ -90,11 +103,14 @@ class NotificationService
                 $isSmsSent = true;
                 $smsSentAt = now();
                 Log::channel('sms')->info("SMS sent to {$phoneNumber} | Message: {$message}");
+                $this->logCommunication($userId, 'sms', $subject, $message, 'success', null, $params);
             } catch (\Exception $e) {
                 Log::channel('sms')->error("Failed to send SMS to {$phoneNumber} | Error: " . $e->getMessage());
+                $this->logCommunication($userId, 'sms', $subject, $message, 'failed', $e->getMessage(), $params);
             }
         } elseif ($sendSms) {
             Log::channel('sms')->warning("Skipped SMS sending: Invalid or missing phone number for User ID: {$userId}");
+            $this->logCommunication($userId, 'sms', $subject, $message, 'failed', 'Invalid or missing phone number', $params);
         }
 
         // 3. Send WhatsApp
@@ -106,31 +122,93 @@ class NotificationService
                 $isWhatsappSent = true;
                 $whatsappSentAt = now();
                 Log::channel('whatsapp')->info("WhatsApp sent to {$phoneNumber} | Message: {$message}");
+                $this->logCommunication($userId, 'whatsapp', $subject, $message, 'success', null, $params);
             } catch (\Exception $e) {
                 Log::channel('whatsapp')->error("Failed to send WhatsApp to {$phoneNumber} | Error: " . $e->getMessage());
+                $this->logCommunication($userId, 'whatsapp', $subject, $message, 'failed', $e->getMessage(), $params);
             }
         } elseif ($sendWhatsapp) {
             Log::channel('whatsapp')->warning("Skipped WhatsApp sending: Invalid or missing phone number for User ID: {$userId}");
+            $this->logCommunication($userId, 'whatsapp', $subject, $message, 'failed', 'Invalid or missing phone number', $params);
         }
 
         // 4. Save to Database
-        $notification = Notification::create([
-            'user_id' => $userId,
-            'notification_type' => $notificationType,
-            'subject' => $subject,
-            'message' => $message,
-            'link' => $link,
-            'is_read' => false,
-            'is_email_sent' => $isEmailSent,
-            'email_sent_at' => $emailSentAt,
-            'is_sms_sent' => $isSmsSent,
-            'sms_sent_at' => $smsSentAt,
-            'is_push_sent' => $isWhatsappSent, // Using push for WhatsApp
-            'push_sent_at' => $whatsappSentAt,
-        ]);
-
-        Log::channel('notification_log')->info("Notification saved to DB | Notification ID: {$notification->id}");
+        if (!$isAllottee) {
+            $notificationId = \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('notifications')->insertGetId([
+                'user_id' => $userId,
+                'application_id' => $params['application_id'] ?? null,
+                'notification_type' => $notificationType,
+                'subject' => $subject,
+                'message' => $message,
+                'link' => $link,
+                'is_read' => 0,
+                'is_email_sent' => $isEmailSent ? 1 : 0,
+                'email_sent_at' => $emailSentAt,
+                'is_sms_sent' => $isSmsSent ? 1 : 0,
+                'sms_sent_at' => $smsSentAt,
+                'is_whatsapp_sent' => $isWhatsappSent ? 1 : 0,
+                'whatsapp_sent_at' => $whatsappSentAt,
+                'created_at' => now(),
+            ]);
+            Log::channel('notification_log')->info("Notification saved to Internal DB | Notification ID: {$notificationId}");
+            
+            $notification = new Notification(['id' => $notificationId]);
+        } else {
+            $notification = Notification::create([
+                'user_id' => $userId,
+                'notification_type' => $notificationType,
+                'subject' => $subject,
+                'message' => $message,
+                'link' => $link,
+                'is_read' => false,
+                'is_email_sent' => $isEmailSent,
+                'email_sent_at' => $emailSentAt,
+                'is_sms_sent' => $isSmsSent,
+                'sms_sent_at' => $smsSentAt,
+                'is_push_sent' => $isWhatsappSent, // Using push for WhatsApp
+                'push_sent_at' => $whatsappSentAt,
+            ]);
+            Log::channel('notification_log')->info("Notification saved to Allottee DB | Notification ID: {$notification->id}");
+        }
 
         return $notification;
+    }
+
+    private function logCommunication($userId, $type, $subject, $content, $status, $error, $params = [])
+    {
+        $request = request();
+        $senderId = \Illuminate\Support\Facades\Auth::id();
+        $senderType = 'allottee';
+
+        $isAllottee = $params['is_allottee'] ?? true;
+        $appId = $params['application_id'] ?? null;
+        $allotteeId = $params['allottee_id'] ?? ($isAllottee ? $userId : $senderId);
+
+        $receiverType = $isAllottee ? 'allottee' : 'jshb_user';
+        $roleId = null;
+
+        if (!$isAllottee && $userId) {
+            $user = \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('users')->where('id', $userId)->first();
+            $roleId = $user ? $user->role_id : null;
+        }
+
+        \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('communication_tracks')->insert([
+            'application_id' => $appId,
+            'allottee_id' => $allotteeId,
+            'sender_type' => $senderType,
+            'sender_id' => $senderId,
+            'receiver_type' => $receiverType,
+            'receiver_id' => $userId,
+            'role_id' => $roleId,
+            'communication_type' => $type,
+            'subject' => $subject,
+            'content' => $content,
+            'ip_address' => $request->ip(),
+            'browser_agent' => $request->userAgent(),
+            'status' => $status,
+            'error_message' => $error,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

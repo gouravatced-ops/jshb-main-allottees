@@ -70,9 +70,14 @@ class DashboardController extends Controller
 
         $latestLogin = $user->loginLogs()->latest()->first();
 
-        // Ensure process steps exist for this allottee
-        $this->processStepService->ensureProcessSteps($allottee);
-
+        // PROCESS FLOW
+        $processStage = $allottee->processSteps()->exists();
+        if (!$processStage) {
+            $this->processStepService->ensureProcessSteps($allottee);
+            $this->processStepService->refreshStepFlow($allottee);
+        } else {
+            $this->processStepService->ensureProcessSteps($allottee);
+        }
         $steps = $allottee->processSteps()->orderBy('step_no')->get();
 
         $pendingApplication = Application::where('allottee_id', $allottee->id)
@@ -373,6 +378,7 @@ class DashboardController extends Controller
                         if ($application->current_user_id) {
                             app(\App\Services\NotificationService::class)->send([
                                 'user_id' => $application->current_user_id,
+                                'is_allottee' => false,
                                 'notification_type' => 'application_movement',
                                 'subject' => 'Signed Agreement Uploaded',
                                 'message' => "The allottee ({$user->name}) has uploaded their signed agreement for application {$application->application_no}. It is now forwarded to you for verification.",
@@ -381,6 +387,23 @@ class DashboardController extends Controller
                                 'send_whatsapp' => false,
                                 'link' => null
                             ]);
+                        }
+
+                        // Notify Allottee
+                        try {
+                            app(\App\Services\NotificationService::class)->send([
+                                'user_id' => $user->id,
+                                'is_allottee' => true,
+                                'notification_type' => 'application_movement',
+                                'subject' => 'Signed Agreement Uploaded Successfully',
+                                'message' => "Your signed agreement for application {$application->application_no} has been successfully uploaded and forwarded to the department for verification.",
+                                'send_email' => true,
+                                'send_sms' => false,
+                                'send_whatsapp' => false,
+                                'link' => null
+                            ]);
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("Failed to send allottee notification: " . $e->getMessage());
                         }
                     }
                 }
@@ -483,7 +506,7 @@ class DashboardController extends Controller
             ApplicationAuditTrail::create([
                 'application_id' => $application->id,
                 'user_id' => $user->id,
-                'role_id' => $user->role_id ?? null,
+                'role_id' => $startingStep ? $startingStep->role_id : ($user->role_id ?? 17),
                 'action' => 'apply',
                 'module' => 'Application Workflow',
                 'description' => 'Application initiated by allottee.',
@@ -517,7 +540,7 @@ class DashboardController extends Controller
                 ApplicationAuditTrail::create([
                     'application_id' => $application->id,
                     'user_id' => $user->id, // Allottee triggered this
-                    'role_id' => null,
+                    'role_id' => $startingStep->role_id, // Use starting step's role (Allottee) instead of null to prevent DB constraint errors
                     'action' => 'forward',
                     'module' => 'Application Workflow',
                     'description' => 'Application automatically forwarded to dealing assistant.',
@@ -533,6 +556,42 @@ class DashboardController extends Controller
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent()
                 ]);
+
+                // 1. Notify Internal Target User (Email & DB Notification)
+                if ($targetUserId) {
+                    try {
+                        app(\App\Services\NotificationService::class)->send([
+                            'user_id' => $targetUserId,
+                            'is_allottee' => false,
+                            'notification_type' => 'application_movement',
+                            'subject' => 'New Application Assigned',
+                            'message' => "A new " . str_replace('_', ' ', $applicationType) . " application ({$applicationNo}) has been submitted by {$allottee->allottee_name} and is assigned to you for processing.",
+                            'send_email' => true,
+                            'send_sms' => false,
+                            'send_whatsapp' => false,
+                            'link' => null
+                        ]);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to send internal notification: " . $e->getMessage());
+                    }
+                }
+
+                // 2. Notify Allottee (Email & DB Notification)
+                try {
+                    app(\App\Services\NotificationService::class)->send([
+                        'user_id' => $user->id,
+                        'is_allottee' => true,
+                        'notification_type' => 'application_movement',
+                        'subject' => 'Application Submitted Successfully',
+                        'message' => "Your " . str_replace('_', ' ', $applicationType) . " application ({$applicationNo}) has been successfully submitted and forwarded to the department.",
+                        'send_email' => true,
+                        'send_sms' => false,
+                        'send_whatsapp' => false,
+                        'link' => null
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send allottee notification: " . $e->getMessage());
+                }
             }
 
             \Illuminate\Support\Facades\DB::commit();

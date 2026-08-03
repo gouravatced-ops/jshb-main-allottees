@@ -423,4 +423,37 @@ class ProcessStepService
         }
         return AllotteeProcessStep::STATUS_LOCKED ?? 'locked';
     }
+
+    public function refreshStepFlow(Allottee $allottee): void
+    {
+        $rows = AllotteeProcessStep::where('allottee_id', $allottee->id)->orderBy('step_no')->get()->keyBy('step_no');
+        if ($rows->isEmpty()) {
+            return;
+        }
+        $sequence = $allottee->payment_option === 'one_time'
+            ? [1, 2, 3, 4, 5, 6, 7, 9, 8, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+            : range(1, 23);
+        $nextPending = null;
+        foreach ($sequence as $stepNo) {
+            $row = $rows->get($stepNo);
+            if (!$row) {
+                continue;
+            }
+            if ($row->status !== 'completed') {
+                $nextPending = $stepNo;
+                break;
+            }
+        }
+        foreach ($rows as $row) {
+            if ($row->status === 'completed') {
+                continue;
+            }
+            if (!in_array($row->step_no, $sequence, true)) {
+                $row->status = 'locked';
+            } else {
+                $row->status = $row->step_no === $nextPending ? 'pending' : 'locked';
+            }
+            $row->save();
+        }
+    }
 }
