@@ -15,7 +15,7 @@
 @php
 $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
 'allottee_id' => $allottee->id,
-'document_type' => 'agreement-letter',
+'document_type' => 'final-agreement-letter',
 ])
 ->latest()
 ->first();
@@ -57,7 +57,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
             View Signed Copy
         </a>
         {{-- DOWNLOAD SIGNED COPY --}}
-        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->signed_file_path, '/') }}" download class="btn-brand"
+        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->signed_file_path, '/') }}" target="_blank" class="btn-brand"
             style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -66,7 +66,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
             Download Signed Copy
         </a>
         @else
-        {{-- VIEW GENERATED LETTER --}}
+        <!-- {{-- VIEW GENERATED LETTER --}}
         <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" target="_blank" class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
@@ -74,9 +74,9 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
                     ">
             <i class="fa-solid fa-eye"></i>
             View Generated Agreement
-        </a>
+        </a> -->
         {{-- DOWNLOAD GENERATED LETTER --}}
-        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" download class="btn-brand"
+        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" target="_blank" class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -106,7 +106,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
                             <div class="alert alert-warning" style="background: #fff3cd; border-color: #ffecb5; color: #664d03; border-radius: 8px;">
                                 <strong><i class="fa-solid fa-circle-exclamation"></i> Instructions:</strong> Please download the generated agreement, sign it physically or digitally, and upload the scanned copy below.
                             </div>
-                            
+
                             <div class="mb-3 mt-4">
                                 <label for="signed_agreement_file" class="form-label" style="font-weight: 600; color: #495057;">Select Signed File (PDF only) <span class="text-danger">*</span></label>
                                 <input class="form-control" type="file" id="signed_agreement_file" name="signed_agreement_file" accept=".pdf" required style="padding: 10px; border-radius: 6px;">
@@ -160,7 +160,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
                         </div>
                         <h6 style="font-weight: 600; margin-top: 15px; color: #495057;">Processing Time</h6>
                         <p style="font-size: 14px; color: #6c757d; margin-bottom: 15px;"><i class="fa-regular fa-clock me-1"></i> Typically takes <strong>7-15 working days</strong> for the department to process and generate your agreement letter.</p>
-                        
+
                         <h6 style="font-weight: 600; color: #495057;">Required Documents (if requested later)</h6>
                         <ul style="font-size: 14px; color: #6c757d; padding-left: 20px; margin-bottom: 20px;">
                             <li>Aadhar Card / PAN Card copy</li>
@@ -168,7 +168,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
                             <li>Income Certificate (if applicable)</li>
                             <li>Payment receipts of initial deposit</li>
                         </ul>
-                        
+
                         <p style="font-size: 14px; color: #333; font-weight: 500; margin-bottom: 0;">Are you sure you want to apply for the Agreement Letter now?</p>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #eaeaea;">
@@ -182,7 +182,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
                 </div>
             </div>
         </div>
-        
+
         <script>
             function openAgreementModal() {
                 var myModal = new bootstrap.Modal(document.getElementById('agreementConfirmModal'), {

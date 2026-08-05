@@ -178,7 +178,7 @@ class NotificationService
     {
         $request = request();
         $senderId = \Illuminate\Support\Facades\Auth::id();
-        $senderType = 'allottee';
+        $senderType = $params['sender_type'] ?? 'system';
 
         $isAllottee = $params['is_allottee'] ?? true;
         $appId = $params['application_id'] ?? null;

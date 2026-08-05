@@ -419,6 +419,7 @@ class DashboardController extends Controller
     {
         $request->validate([
             'application_type' => 'required|string',
+            'agreement_file' => 'nullable|file|max:5120|mimes:pdf',
         ]);
 
         $user = Auth::user();
@@ -486,6 +487,71 @@ class DashboardController extends Controller
                 'remarks' => 'New ' . $applicationType . ' application initiated by allottee',
                 'created_by' => $user->id,
             ]);
+
+            // Save Agreement Document for Possession Application
+            if ($applicationType === 'possession') {
+                $agreementFilePath = null;
+                $agreementFileName = 'Signed Agreement';
+                $fileSize = 0;
+                $fileMimeType = 'application/pdf';
+
+                if ($request->has('use_existing_agreement') && $request->use_existing_agreement == "1") {
+                    $agreementDoc = \App\Models\AllotteeGeneratedDocument::where([
+                        'allottee_id' => $allottee->id,
+                        'document_type' => 'final-agreement-letter',
+                    ])->latest()->first();
+
+                    if ($agreementDoc) {
+                        $agreementFilePath = $agreementDoc->signed_file_path ?? $agreementDoc->file_path;
+                        $agreementFileName = $agreementDoc->signed_file_name ?? $agreementDoc->file_name;
+                    }
+                } elseif ($request->hasFile('agreement_file')) {
+                    $schemeCode = $allottee->scheme->scheme_code ?? 'SCH';
+                    $propertyNumber = $allottee->property_number ?? 'PROP';
+                    $extraData = [
+                        'username'          => $user->username ?? '',
+                        'division_code'     => $allottee->division->division_code ?? '',
+                        'subdivision_code'  => $allottee->subDivision->subdivision_code ?? '',
+                        'property_category' => $allottee->propertyCategory->category_code ?? '',
+                        'property_type'     => $allottee->propertyType->type_code ?? '',
+                        'property_income'   => $allottee->quarterType->quarter_code ?? '',
+                        'application_for'   => 'possession',
+                    ];
+
+                    $uploadResult = $this->uploadToDocumentApi(
+                        $request->file('agreement_file'),
+                        'APPLICATION',
+                        $schemeCode,
+                        $propertyNumber,
+                        date('Y'),
+                        date('m'),
+                        date('d'),
+                        null,
+                        $extraData
+                    );
+
+                    $agreementFilePath = $uploadResult['file_path'];
+                    $agreementFileName = basename($agreementFilePath);
+                    $fileSize = $request->file('agreement_file')->getSize();
+                    $fileMimeType = $request->file('agreement_file')->getMimeType();
+                }
+
+                if ($agreementFilePath) {
+                    \App\Models\ApplicationDocument::create([
+                        'application_id' => $application->id,
+                        'movement_id'    => null,
+                        'document_type'  => 'SIGNED_AGREEMENT',
+                        'document_name'  => 'Signed Agreement',
+                        'file_name'      => $agreementFileName,
+                        'file_path'      => $agreementFilePath,
+                        'file_size'      => $fileSize,
+                        'file_mime_type' => $fileMimeType,
+                        'uploaded_by'    => $user->id,
+                        'uploader_type'  => 'Allottee',
+                        'uploaded_at'    => now(),
+                    ]);
+                }
+            }
 
             // Add Movement Log - First Row (Created)
             ApplicationMovement::create([
@@ -569,7 +635,9 @@ class DashboardController extends Controller
                             'send_email' => true,
                             'send_sms' => false,
                             'send_whatsapp' => false,
-                            'link' => null
+                            'link' => null,
+                            'application_id' => $application->id,
+                            'allottee_id' => $allottee->id
                         ]);
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error("Failed to send internal notification: " . $e->getMessage());
@@ -587,7 +655,9 @@ class DashboardController extends Controller
                         'send_email' => true,
                         'send_sms' => false,
                         'send_whatsapp' => false,
-                        'link' => null
+                        'link' => null,
+                        'application_id' => $application->id,
+                        'allottee_id' => $allottee->id
                     ]);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to send allottee notification: " . $e->getMessage());
