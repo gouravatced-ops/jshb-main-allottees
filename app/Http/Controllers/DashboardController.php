@@ -241,18 +241,31 @@ class DashboardController extends Controller
                     'uploaded_document_id' => $allotteeDoc->id
                 ]);
 
-                // Notify the Engineer who requested the document
+                // Notify the Engineer who requested the document only if ALL their requested documents are uploaded
                 if ($docRequest->requested_by) {
-                    app(\App\Services\NotificationService::class)->send([
-                        'user_id' => $docRequest->requested_by,
-                        'notification_type' => 'success',
-                        'subject' => 'Document Uploaded by Allottee',
-                        'message' => "The allottee ({$user->name}) has uploaded the requested document: {$docName}.",
-                        'send_email' => true,
-                        'send_sms' => true, // Since it's to an engineer, maybe we enable sms/whatsapp as per config
-                        'send_whatsapp' => true,
-                        'link' => null
-                    ]);
+                    $allEngineerRequests = \App\Models\DocumentRequest::where('application_id', $docRequest->application_id)
+                        ->where('requested_by', $docRequest->requested_by)
+                        ->get();
+
+                    $pendingCount = $allEngineerRequests->where('status', 'pending')->count();
+
+                    if ($pendingCount === 0) {
+                        // All requested documents by this engineer have been uploaded
+                        $uploadedDocNames = $allEngineerRequests->map(function ($req) {
+                            return $req->documentMaster ? $req->documentMaster->document_name : 'Document';
+                        })->implode(', ');
+
+                        app(\App\Services\NotificationService::class)->send([
+                            'user_id' => $docRequest->requested_by,
+                            'notification_type' => 'success',
+                            'subject' => 'All Requested Documents Uploaded by Allottee',
+                            'message' => "The allottee ({$user->name}) has successfully uploaded all the requested documents: {$uploadedDocNames}.",
+                            'send_email' => true,
+                            'send_sms' => true,
+                            'send_whatsapp' => true,
+                            'link' => null
+                        ]);
+                    }
                 }
 
                 return back()->with('success', 'Document uploaded successfully.');
