@@ -234,44 +234,44 @@
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small"><i class="fa-solid fa-arrow-left text-primary"></i> North Dim (m)</label>
-                            <input type="number" class="form-control map-input" id="mapNorth" value="{{ $mapParams['north']}}">
+                            <input type="number" class="form-control map-input" id="mapNorth" value="{{ $mapParams['north'] ?? '' }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small">North Label</label>
-                            <input type="text" class="form-control map-input" id="mapNorthLabel" value="{{ $mapParams['northLabel']}}">
+                            <input type="text" class="form-control map-input" id="mapNorthLabel" value="{{ $mapParams['northLabel'] ?? '' }}">
                         </div>
                     </div>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small"><i class="fa-solid fa-arrow-right text-danger"></i> South Dim (m)</label>
-                            <input type="number" class="form-control map-input" id="mapSouth" value="{{ $mapParams['south']}}">
+                            <input type="number" class="form-control map-input" id="mapSouth" value="{{ $mapParams['south'] ?? '' }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small">South Label</label>
-                            <input type="text" class="form-control map-input" id="mapSouthLabel" value="{{ $mapParams['southLabel']}}">
+                            <input type="text" class="form-control map-input" id="mapSouthLabel" value="{{ $mapParams['southLabel'] ?? '' }}">
                         </div>
                     </div>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small"><i class="fa-solid fa-arrow-up text-success"></i> East Dim (m)</label>
-                            <input type="number" class="form-control map-input" id="mapEast" value="{{ $mapParams['east']}}">
+                            <input type="number" class="form-control map-input" id="mapEast" value="{{ $mapParams['east'] ?? '' }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small">East Label</label>
-                            <input type="text" class="form-control map-input" id="mapEastLabel" value="{{ $mapParams['eastLabel']}}">
+                            <input type="text" class="form-control map-input" id="mapEastLabel" value="{{ $mapParams['eastLabel'] ?? '' }}">
                         </div>
                     </div>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small"><i class="fa-solid fa-arrow-down text-warning"></i> West Dim (m)</label>
-                            <input type="number" class="form-control map-input" id="mapWest" value="{{ $mapParams['west']}}">
+                            <input type="number" class="form-control map-input" id="mapWest" value="{{ $mapParams['west'] ?? '' }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold text-muted small">West Label</label>
-                            <input type="text" class="form-control map-input" id="mapWestLabel" value="{{ $mapParams['westLabel']}}">
+                            <input type="text" class="form-control map-input" id="mapWestLabel" value="{{ $mapParams['westLabel'] ?? '' }}">
                         </div>
                     </div>
                     

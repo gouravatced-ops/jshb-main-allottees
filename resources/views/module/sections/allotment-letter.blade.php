@@ -44,7 +44,7 @@
                 margin-top:18px;
                 flex-wrap:wrap;
             ">
-            @if ($allotmentLetter)
+            <!-- @if ($allotmentLetter)
             {{-- VIEW GENERATED LETTER --}}
             <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/') }}" target="_blank" class="btn-brand"
                 style="
@@ -53,9 +53,9 @@
                     ">
                 <i class="fa-solid fa-eye"></i>
                 View Generated Copy
-            </a>
+            </a> -->
             {{-- DOWNLOAD GENERATED LETTER --}}
-            <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/') }}" download class="btn-brand"
+            <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/') }}" target="_blank" class="btn-brand"
                 style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -63,7 +63,7 @@
                 <i class="fa-solid fa-download"></i>
                 Download Generated Copy
             </a>
-            {{-- VIEW SIGNED COPY --}}
+            <!-- {{-- VIEW SIGNED COPY --}}
             @if ($allotmentLetter->signed_file_path)
             <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/') }}" target="_blank" class="btn-brand"
                 style="
@@ -74,31 +74,13 @@
                 View Signed Copy
             </a>
             {{-- DOWNLOAD SIGNED COPY --}}
-            <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/') }}" download class="btn-brand"
+            <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/') }}" target="_blank" class="btn-brand"
                 style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
                         ">
                 <i class="fa-solid fa-download"></i>
                 Download Signed Copy
-            </a>
-            @else
-            {{-- UPLOAD SIGNED COPY --}}
-            <a href="javascript:void(0)"
-                onclick="openReupload(
-                            '{{ $allotmentLetter->document_name }}',
-                            '{{ $allotmentLetter->document_type }}',
-                            '{{ $allotmentLetter->id }}',
-                            '{{ $allotmentLetter->allottee_id }}',
-                            '{{ $step->step_no }}'
-                        )"
-                class="btn-brand"
-                style="
-                            background:rgba(255,255,255,.95);
-                            color:var(--brand);
-                        ">
-                <i class="fa-solid fa-file-signature"></i>
-                Upload Signed Copy
             </a>
             @endif
             @else
@@ -111,7 +93,7 @@
                 <i class="fa-solid fa-file-pdf me-2"></i>
                 Generate Allotment Letter
             </a>
-            @endif
+            @endif -->
         </div>
     </div>
 </div>

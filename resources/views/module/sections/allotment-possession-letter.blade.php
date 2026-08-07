@@ -45,6 +45,14 @@ $possessionLetter = \App\Models\AllotteeGeneratedDocument::where([
                 margin-top:18px;
                 flex-wrap:wrap;
             ">
+        @php
+            $agreementDoc = \App\Models\AllotteeGeneratedDocument::where([
+                'allottee_id' => $allottee->id,
+                'document_type' => 'final-agreement-letter',
+            ])->latest()->first();
+            
+            $hasStampedAgreement = $agreementDoc ? true : false;
+        @endphp
         @if ($possessionLetter)
         {{-- VIEW GENERATED LETTER --}}
         <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->file_path, '/') }}" target="_blank" class="btn-brand"
@@ -103,24 +111,71 @@ $possessionLetter = \App\Models\AllotteeGeneratedDocument::where([
         </a>
         @endif
         @else
-        {{-- <button class="btn-brand" disabled
-                style="
-                        background:rgba(255,255,255,.2);
-                        opacity:0.7;
-                    ">
-                <i class="fa-solid fa-clock"></i>
-                Waiting For Generation
-            </button> --}}
+        @if ($pendingApplication && $pendingApplication->application_type === 'possession')
+        {{-- APPLICATION PENDING --}}
+        <button class="btn-brand" disabled style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; cursor:not-allowed;">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Application In Progress
+        </button>
+        @else
+        @if($hasStampedAgreement)
+        <button type="button" class="btn-brand" style="background:rgba(255,255,255,.95); color:var(--brand);" onclick="openPossessionModal()">
+            <i class="fa-solid fa-paper-plane"></i>
+            Apply for Possession Letter
+        </button>
+        @else
+        <button type="button" class="btn-brand" disabled style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; cursor:not-allowed;" title="Signed Agreement required to apply">
+            <i class="fa-solid fa-ban"></i>
+            Apply for Possession Letter
+        </button>
+        @endif
 
-        <a href="{{ '#' }}"
-            class="btn-brand"
-            style="
-                        background:rgba(255,255,255,.95);
-                        color:var(--brand);
-                    ">
-            <i class="fa-solid fa-file-pdf me-2"></i>
-            Generate Possession Letter
-        </a>
+        <!-- Possession Confirmation Modal -->
+        <div class="modal fade" id="possessionConfirmModal" tabindex="-1" aria-labelledby="possessionConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div class="modal-header" style="background: #f8f9fa; border-bottom: 1px solid #eaeaea; border-radius: 12px 12px 0 0;">
+                        <h5 class="modal-title" id="possessionConfirmModalLabel" style="font-weight: 600; color: #333;"><i class="fa-solid fa-key text-primary me-2"></i> Apply for Possession Letter</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('allottee.apply.application') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="application_type" value="possession">
+                        <div class="modal-body" style="padding: 20px;">
+                            <div class="alert alert-info" style="background: #e3f2fd; border-color: #b6d4fe; color: #084298; border-radius: 8px;">
+                                <strong><i class="fa-solid fa-circle-info"></i> Information:</strong> You are about to initiate the Possession application process.
+                            </div>
+                            
+                            <h6 style="font-weight: 600; margin-top: 15px; color: #495057;">Stamped Agreement Requirement</h6>
+                            <p style="font-size: 14px; color: #6c757d; margin-bottom: 15px;">A stamped agreement is mandatory for this application.</p>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="use_existing_agreement" name="use_existing_agreement" value="1" required>
+                                <label class="form-check-label" for="use_existing_agreement" style="font-weight: 500; color: #333;">
+                                    I confirm to use my existing generated stamped agreement document
+                                </label>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #333; font-weight: 500; margin-bottom: 0;">Are you sure you want to apply for the Possession Letter now?</p>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #eaeaea;">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-weight: 500; border-radius: 6px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="font-weight: 500; border-radius: 6px;"><i class="fa-solid fa-check-circle me-1"></i> Confirm & Apply</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function openPossessionModal() {
+                var myModal = new bootstrap.Modal(document.getElementById('possessionConfirmModal'), {
+                    keyboard: false
+                });
+                myModal.show();
+            }
+        </script>
+        @endif
         @endif
     </div>
 </div>
