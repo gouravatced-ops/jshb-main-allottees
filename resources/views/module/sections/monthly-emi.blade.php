@@ -314,7 +314,7 @@ $emiCalculatorService->refreshPenalty($currentDemand);
                             <td>
 
                                 @if ($txn->receipt_path)
-                                <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/') }}" target="_blank">
+                                <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/')]) }}" target="_blank">
 
                                     Receipt
 
