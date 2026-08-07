@@ -48,7 +48,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
         @if ($agreementDocument)
         {{-- VIEW SIGNED COPY --}}
         @if ($agreementDocument->signed_file_path)
-        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->signed_file_path, '/') }}" target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
             style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -57,7 +57,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
             View Signed Copy
         </a>
         {{-- DOWNLOAD SIGNED COPY --}}
-        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->signed_file_path, '/') }}" target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
             style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -67,7 +67,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
         </a>
         @else
         <!-- {{-- VIEW GENERATED LETTER --}}
-        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/')]) }}" target="_blank" class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -76,7 +76,7 @@ $agreementDocument = \App\Models\AllotteeGeneratedDocument::where([
             View Generated Agreement
         </a> -->
         {{-- DOWNLOAD GENERATED LETTER --}}
-        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/')]) }}" target="_blank" class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);

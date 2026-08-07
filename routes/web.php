@@ -58,3 +58,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/{blade}', [\App\Http\Controllers\DashboardController::class, 'section'])->name('dashboard.section');
 });
+
+// Media Fallback Routes
+Route::get('/media/profile/{filename}', [\App\Http\Controllers\MediaController::class, 'profileImage'])->name('media.profile');
+Route::get('/media/document', [\App\Http\Controllers\MediaController::class, 'document'])->name('media.document');
+Route::get('/media/image', [\App\Http\Controllers\MediaController::class, 'genericImage'])->name('media.image');

@@ -189,7 +189,7 @@
                             ])->latest()->first();
                             @endphp
                             @if($agreementDocument)
-                            <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/') }}" target="_blank" class="btn btn-sm btn-outline-primary mb-1 d-block" title="Download Agreement">
+                            <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($agreementDocument->file_path, '/')]) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-1 d-block" title="Download Agreement">
                                 <i class="fa-solid fa-download"></i> Download
                             </a>
                             @if(!$signedAgreementDocument)

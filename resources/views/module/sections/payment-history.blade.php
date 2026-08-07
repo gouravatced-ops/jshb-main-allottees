@@ -96,7 +96,7 @@ $oneTimePaymentsHistory = \App\Models\AllotteeTransaction::where([
                         @php
                         $extension = pathinfo($payment->receipt_path, PATHINFO_EXTENSION);
                         @endphp
-                        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($payment->receipt_path, '/') }}" target="_blank"
+                        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($payment->receipt_path, '/')]) }}" target="_blank"
                             class="btn btn-sm btn-light border">
                             @if (in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'docx']))
                             <i class="fa-solid fa-image text-success"></i>

@@ -31,7 +31,7 @@
                     </a>
                     
                     @if(isset($transaction->receipt_path) && $transaction->receipt_path)
-                        <a href="{{ rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($transaction->receipt_path, '/') }}" target="_blank" class="btn-brand">
+                        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($transaction->receipt_path, '/')]) }}" target="_blank" class="btn-brand">
                             <i class="fa-solid fa-download"></i> Download Receipt
                         </a>
                     @endif
