@@ -12,12 +12,22 @@ class MediaController extends Controller
     /**
      * Serve a profile image, falling back to user-profile.png if not found.
      */
-    public function profileImage($filename)
+    public function profileImage(Request $request, $filename)
     {
-        $path = storage_path('app/public/photos/' . $filename);
+        if ($filename && $filename !== 'default') {
+            $path = storage_path('app/public/photos/' . $filename);
+            if (File::exists($path) && is_file($path)) {
+                return response()->file($path);
+            }
+        }
 
-        if (File::exists($path) && is_file($path)) {
-            return response()->file($path);
+        $user = null;
+        if ($request->has('user_id')) {
+            $user = User::find($request->query('user_id'));
+        }
+        
+        if (!$user && $filename !== 'default') {
+            $user = User::where('photo', $filename)->first();
         }
 
         return response()->file(public_path('img/user-profile.png'));
