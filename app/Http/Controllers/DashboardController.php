@@ -483,7 +483,41 @@ class DashboardController extends Controller
                 ->orderByDesc('is_default')
                 ->value('id') : null;
 
-            $applicationNo = 'APL-' . date('Y') . '-' . rand(12345678, 99999999);
+            // Application Number Generation
+            $typePrefixMap = [
+                'allotment' => 'ATL',
+                'possession' => 'POS',
+                'agreement' => 'AGR',
+                'divident' => 'DVD',
+                'dividend' => 'DVD',
+                'final_calculation' => 'FCL',
+                'site_verification' => 'SVF',
+                'register' => 'RGT',
+                'name_transfer' => 'NTF',
+                'allotment_cancel' => 'ACL',
+            ];
+            
+            $prefix = $typePrefixMap[strtolower($applicationType)] ?? 'APP';
+            
+            $divCode = $allottee->division ? $allottee->division->division_code : 'XXX';
+            $subDivCode = $allottee->subDivision ? $allottee->subDivision->subdivision_code : 'XXX';
+            
+            // Ensure codes are available, handle missing codes safely
+            $divCode = strtoupper(substr($divCode, 0, 3));
+            $subDivCode = strtoupper(substr($subDivCode, 0, 3));
+            
+            $rand2Num1 = str_pad(rand(0, 99), 2, '0', STR_PAD_LEFT);
+            $month2Digit = date('m');
+            
+            $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $rand2Alpha1 = $characters[rand(0, 25)] . $characters[rand(0, 25)];
+            $rand2Alpha2 = $characters[rand(0, 25)] . $characters[rand(0, 25)];
+            
+            $day2Digit = date('d');
+            $rand2Num2 = str_pad(rand(0, 99), 2, '0', STR_PAD_LEFT);
+            $year2Digit = date('y');
+            
+            $applicationNo = "{$prefix}-{$divCode}{$subDivCode}-{$rand2Num1}{$month2Digit}{$rand2Alpha1}{$day2Digit}{$rand2Num2}{$year2Digit}{$rand2Alpha2}";
 
             $application = Application::create([
                 'application_no' => $applicationNo,
