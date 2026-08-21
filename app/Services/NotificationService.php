@@ -80,7 +80,25 @@ class NotificationService
         // 1. Send Email
         if ($sendEmail && filter_var($emailId, FILTER_VALIDATE_EMAIL)) {
             try {
-                Mail::to($emailId)->send(new GenericNotificationMail($subject, $message, $link));
+                // Determine From Address based on routing rules
+                $fromAddress = null;
+                if ($isAllottee) {
+                    $fromAddress = env('MAIL_NOREPLY_USERNAME', 'no-reply@adms.jshb.computered.co.in');
+                } else {
+                    if (($params['notification_type'] ?? '') === 'system') {
+                        $fromAddress = env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in');
+                    } else {
+                        $fromAddress = env('MAIL_SUPPORT_USERNAME', 'support@adms.jshb.computered.co.in');
+                    }
+                }
+
+                $mailable = $params['mailable'] ?? new GenericNotificationMail($subject, $message, $link, $fromAddress);
+                
+                if (isset($params['mailable']) && property_exists($mailable, 'fromAddress')) {
+                    $mailable->fromAddress = $fromAddress;
+                }
+
+                Mail::to($emailId)->send($mailable);
                 $isEmailSent = true;
                 $emailSentAt = now();
                 Log::channel('send_mail')->info("Email sent to {$emailId} | Subject: {$subject}");
@@ -134,25 +152,29 @@ class NotificationService
 
         // 4. Save to Database
         if (!$isAllottee) {
-            $notificationId = \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('notifications')->insertGetId([
-                'user_id' => $userId,
-                'application_id' => $params['application_id'] ?? null,
-                'notification_type' => $notificationType,
-                'subject' => $subject,
-                'message' => $message,
-                'link' => $link,
-                'is_read' => 0,
-                'is_email_sent' => $isEmailSent ? 1 : 0,
-                'email_sent_at' => $emailSentAt,
-                'is_sms_sent' => $isSmsSent ? 1 : 0,
-                'sms_sent_at' => $smsSentAt,
-                'is_whatsapp_sent' => $isWhatsappSent ? 1 : 0,
-                'whatsapp_sent_at' => $whatsappSentAt,
-                'created_at' => now(),
-            ]);
-            Log::channel('notification_log')->info("Notification saved to Internal DB | Notification ID: {$notificationId}");
-            
-            $notification = new Notification(['id' => $notificationId]);
+            if ($userId) {
+                $notificationId = \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('notifications')->insertGetId([
+                    'user_id' => $userId,
+                    'application_id' => $params['application_id'] ?? null,
+                    'notification_type' => $notificationType,
+                    'subject' => $subject,
+                    'message' => $message,
+                    'link' => $link,
+                    'is_read' => 0,
+                    'is_email_sent' => $isEmailSent ? 1 : 0,
+                    'email_sent_at' => $emailSentAt,
+                    'is_sms_sent' => $isSmsSent ? 1 : 0,
+                    'sms_sent_at' => $smsSentAt,
+                    'is_whatsapp_sent' => $isWhatsappSent ? 1 : 0,
+                    'whatsapp_sent_at' => $whatsappSentAt,
+                    'created_at' => now(),
+                ]);
+                Log::channel('notification_log')->info("Notification saved to Internal DB | Notification ID: {$notificationId}");
+                $notification = new Notification(['id' => $notificationId]);
+            } else {
+                Log::channel('notification_log')->info("System notification processed without DB save (No user_id)");
+                $notification = new Notification(['id' => 0]); // dummy
+            }
         } else {
             $notification = Notification::create([
                 'user_id' => $userId,
