@@ -257,6 +257,7 @@ class DashboardController extends Controller
 
                         app(\App\Services\NotificationService::class)->send([
                             'user_id' => $docRequest->requested_by,
+                            'is_allottee' => false,
                             'notification_type' => 'success',
                             'subject' => 'All Requested Documents Uploaded by Allottee',
                             'message' => "The allottee ({$user->name}) has successfully uploaded all the requested documents: {$uploadedDocNames}.",
@@ -401,6 +402,19 @@ class DashboardController extends Controller
                                 'link' => null
                             ]);
                         }
+
+                        // Notify System
+                        app(\App\Services\NotificationService::class)->send([
+                            'email_id' => env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in'),
+                            'is_allottee' => false,
+                            'notification_type' => 'application_movement',
+                            'subject' => 'Signed Agreement Uploaded',
+                            'message' => "The allottee ({$user->name}) has uploaded their signed agreement for application {$application->application_no}.",
+                            'send_email' => true,
+                            'send_sms' => false,
+                            'send_whatsapp' => false,
+                            'link' => null
+                        ]);
 
                         // Notify Allottee
                         try {
@@ -689,6 +703,25 @@ class DashboardController extends Controller
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error("Failed to send internal notification: " . $e->getMessage());
                     }
+                }
+
+                // Notify System
+                try {
+                    app(\App\Services\NotificationService::class)->send([
+                        'email_id' => env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in'),
+                        'is_allottee' => false,
+                        'notification_type' => 'application_movement',
+                        'subject' => 'New Application Submitted',
+                        'message' => "A new " . str_replace('_', ' ', $applicationType) . " application ({$applicationNo}) has been submitted by {$allottee->allottee_name}.",
+                        'send_email' => true,
+                        'send_sms' => false,
+                        'send_whatsapp' => false,
+                        'link' => null,
+                        'application_id' => $application->id,
+                        'allottee_id' => $allottee->id
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send system notification: " . $e->getMessage());
                 }
 
                 // 2. Notify Allottee (Email & DB Notification)

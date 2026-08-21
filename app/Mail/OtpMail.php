@@ -42,7 +42,11 @@ class OtpMail extends Mailable
             default          => 'Verification',
         };
 
+        $senderAddress = env('MAIL_SECURITY_USERNAME', 'security@adms.jshb.computered.co.in');
+        $from = new \Illuminate\Mail\Mailables\Address($senderAddress, config('app.name') . ' Security');
+
         return new Envelope(
+            from: $from,
             subject: "Your OTP for {$purposeLabel} - " . config('app.name'),
         );
     }
