@@ -60,16 +60,11 @@ class NotificationService
             }
         }
 
-        // Development mode override
-        if (config('app.env') === 'local') {
-            $emailId = 'gouravatced@gmail.com';
-        }
-
         // Initialize delivery statuses
         $isEmailSent = false;
         $isSmsSent = false;
         $isWhatsappSent = false;
-        
+
         $emailSentAt = null;
         $smsSentAt = null;
         $whatsappSentAt = null;
@@ -93,7 +88,7 @@ class NotificationService
                 }
 
                 $mailable = $params['mailable'] ?? new GenericNotificationMail($subject, $message, $link, $fromAddress);
-                
+
                 if (isset($params['mailable']) && property_exists($mailable, 'fromAddress')) {
                     $mailable->fromAddress = $fromAddress;
                 }
@@ -117,7 +112,7 @@ class NotificationService
             try {
                 // TODO: Integrate actual SMS Gateway API here
                 // Example: SmsGateway::send($phoneNumber, $message);
-                
+
                 $isSmsSent = true;
                 $smsSentAt = now();
                 Log::channel('sms')->info("SMS sent to {$phoneNumber} | Message: {$message}");
@@ -136,7 +131,7 @@ class NotificationService
             try {
                 // TODO: Integrate actual WhatsApp Gateway API here
                 // Example: WhatsappGateway::send($phoneNumber, $message);
-                
+
                 $isWhatsappSent = true;
                 $whatsappSentAt = now();
                 Log::channel('whatsapp')->info("WhatsApp sent to {$phoneNumber} | Message: {$message}");

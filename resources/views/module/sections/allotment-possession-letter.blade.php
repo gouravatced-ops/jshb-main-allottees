@@ -55,7 +55,7 @@ $possessionLetter = \App\Models\AllotteeGeneratedDocument::where([
         @endphp
         @if ($possessionLetter)
         {{-- VIEW GENERATED LETTER --}}
-        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->file_path, '/')]) }}" target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->file_path, '/')]) }}" target="_blank" class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -64,7 +64,7 @@ $possessionLetter = \App\Models\AllotteeGeneratedDocument::where([
             View Generated Copy
         </a>
         {{-- DOWNLOAD GENERATED LETTER --}}
-        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->file_path, '/')]) }}" download class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->file_path, '/')]) }}" download class="btn-brand"
             style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -74,7 +74,7 @@ $possessionLetter = \App\Models\AllotteeGeneratedDocument::where([
         </a>
         {{-- VIEW SIGNED COPY --}}
         @if ($possessionLetter->signed_file_path)
-        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
             style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -83,7 +83,7 @@ $possessionLetter = \App\Models\AllotteeGeneratedDocument::where([
             View Signed Copy
         </a>
         {{-- DOWNLOAD SIGNED COPY --}}
-        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->signed_file_path, '/')]) }}" download class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($possessionLetter->signed_file_path, '/')]) }}" download class="btn-brand"
             style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
