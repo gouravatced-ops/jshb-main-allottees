@@ -107,8 +107,9 @@
                                 @if ($payment->receipt_path)
                                     @php
                                         $extension = pathinfo($payment->receipt_path, PATHINFO_EXTENSION);
-                                        $docBaseUrl = rtrim(env('DOC_API_URL', ''), '/');
-                                        $previewSrc = !empty($payment->receipt_path) ? $docBaseUrl . '/' . ltrim($payment->receipt_path, '/') : '';
+                                        $docBaseUrl = rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/');
+                                        $rawUrl = !empty($payment->receipt_path) ? $docBaseUrl . '/' . ltrim($payment->receipt_path, '/') : '';
+                                        $previewSrc = !empty($rawUrl) ? route('media.document', ['path' => $rawUrl]) : '';
                                     @endphp
                                     <a href="{{ $previewSrc }}" target="_blank"
                                         class="btn btn-sm btn-light border">
@@ -147,3 +148,4 @@
         </div>
     @endif
 </div>
+

@@ -232,7 +232,7 @@ $paymentId = base64_encode($payment->id);
         </button>
         @endif
         @if ($transaction)
-        <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($transaction->receipt_path, '/')]) }}" download target="_blank" class="btn-brand"
+        <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($transaction->receipt_path, '/')]) }}" download target="_blank" class="btn-brand"
             style="
                 background:#fff;
                 color:var(--brand);

@@ -64,7 +64,7 @@
                 ">
 
                 <!-- VIEW -->
-                <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/')]) }}" target="_blank" class="btn-brand"
+                <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/')]) }}" target="_blank" class="btn-brand"
                     style="
                             background:rgba(255,255,255,.2);
                             border:1.5px solid rgba(255,255,255,.4)
@@ -74,7 +74,7 @@
                 </a>
 
                 <!-- DOWNLOAD -->
-                <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/')]) }}" download class="btn-brand"
+                <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($filePath, '/')]) }}" download class="btn-brand"
                     style="
                     background:rgba(255,255,255,.95);
                     color:var(--brand)

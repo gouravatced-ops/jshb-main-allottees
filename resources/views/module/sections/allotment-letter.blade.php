@@ -46,7 +46,7 @@
             ">
             <!-- @if ($allotmentLetter)
             {{-- VIEW GENERATED LETTER --}}
-            <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/')]) }}" target="_blank" class="btn-brand"
+            <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/')]) }}" target="_blank" class="btn-brand"
                 style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -55,7 +55,7 @@
                 View Generated Copy
             </a> -->
             {{-- DOWNLOAD GENERATED LETTER --}}
-            <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/')]) }}" target="_blank" class="btn-brand"
+            <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->file_path, '/')]) }}" target="_blank" class="btn-brand"
                 style="
                         background:rgba(255,255,255,.95);
                         color:var(--brand);
@@ -65,7 +65,7 @@
             </a>
             <!-- {{-- VIEW SIGNED COPY --}}
             @if ($allotmentLetter->signed_file_path)
-            <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
+            <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
                 style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
@@ -74,7 +74,7 @@
                 View Signed Copy
             </a>
             {{-- DOWNLOAD SIGNED COPY --}}
-            <a href="{{ route('media.document', ['path' => rtrim(env('DOC_API_URL', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
+            <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($allotmentLetter->signed_file_path, '/')]) }}" target="_blank" class="btn-brand"
                 style="
                             background:rgba(255,255,255,.95);
                             color:var(--brand);
