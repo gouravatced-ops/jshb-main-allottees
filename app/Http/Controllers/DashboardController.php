@@ -685,15 +685,30 @@ class DashboardController extends Controller
                     'user_agent' => $request->userAgent()
                 ]);
 
+                $targetUserName = 'the concerned department';
+                if ($targetUserId) {
+                    $assignedUser = \Illuminate\Support\Facades\DB::connection('adms_jshb')->table('users')->where('id', $targetUserId)->first();
+                    if ($assignedUser) {
+                        $targetUserName = $assignedUser->name ?? 'the concerned department';
+                    }
+                }
+
+                $formattedAppType = ucwords(str_replace('_', ' ', $applicationType));
+
                 // 1. Notify Internal Target User (Email & DB Notification)
                 if ($targetUserId) {
                     try {
+                        $targetMessage = "A new application has been submitted and assigned to you for processing.\n\n";
+                        $targetMessage .= "Allottee Name: {$allottee->allottee_name}\n";
+                        $targetMessage .= "Application For: {$formattedAppType}\n";
+                        $targetMessage .= "Application Number: {$applicationNo}";
+
                         $notificationData = [
                             'user_id' => $targetUserId,
                             'is_allottee' => false,
                             'notification_type' => 'application_movement',
-                            'subject' => 'New Application Assigned',
-                            'message' => "A new " . str_replace('_', ' ', $applicationType) . " application ({$applicationNo}) has been submitted by {$allottee->allottee_name} and is assigned to you for processing.",
+                            'subject' => 'New Application Submitted',
+                            'message' => $targetMessage,
                             'send_email' => true,
                             'send_sms' => false,
                             'send_whatsapp' => false,
@@ -714,12 +729,18 @@ class DashboardController extends Controller
 
                 // Notify System
                 try {
+                    $systemMessage = "A new application has been submitted by the allottee.\n\n";
+                    $systemMessage .= "Allottee Name: {$allottee->allottee_name}\n";
+                    $systemMessage .= "Application For: {$formattedAppType}\n";
+                    $systemMessage .= "Application Number: {$applicationNo}\n";
+                    $systemMessage .= "Assigned To: {$targetUserName}";
+
                     app(\App\Services\NotificationService::class)->send([
                         'email_id' => env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in'),
                         'is_allottee' => false,
                         'notification_type' => 'application_movement',
                         'subject' => 'New Application Submitted',
-                        'message' => "A new " . str_replace('_', ' ', $applicationType) . " application ({$applicationNo}) has been submitted by {$allottee->allottee_name}.",
+                        'message' => $systemMessage,
                         'send_email' => true,
                         'send_sms' => false,
                         'send_whatsapp' => false,
