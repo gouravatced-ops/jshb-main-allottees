@@ -399,7 +399,8 @@ class DashboardController extends Controller
                                 'send_email' => true,
                                 'send_sms' => false,
                                 'send_whatsapp' => false,
-                                'link' => null
+                                'link' => null,
+                                'cc' => env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in')
                             ]);
                         }
 
@@ -687,7 +688,7 @@ class DashboardController extends Controller
                 // 1. Notify Internal Target User (Email & DB Notification)
                 if ($targetUserId) {
                     try {
-                        app(\App\Services\NotificationService::class)->send([
+                        $notificationData = [
                             'user_id' => $targetUserId,
                             'is_allottee' => false,
                             'notification_type' => 'application_movement',
@@ -699,7 +700,13 @@ class DashboardController extends Controller
                             'link' => null,
                             'application_id' => $application->id,
                             'allottee_id' => $allottee->id
-                        ]);
+                        ];
+
+                        if (in_array(strtolower($applicationType), ['agreement', 'possession'])) {
+                            $notificationData['cc'] = env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in');
+                        }
+
+                        app(\App\Services\NotificationService::class)->send($notificationData);
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error("Failed to send internal notification: " . $e->getMessage());
                     }
