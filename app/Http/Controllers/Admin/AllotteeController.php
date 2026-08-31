@@ -1209,13 +1209,13 @@ class AllotteeController extends Controller
             }
 
             // STEP MANAGEMENT
-            $step7 = AllotteeProcessStep::where(
+            $step9 = AllotteeProcessStep::where(
                 'allottee_id',
                 $allottee->id
-            )->where('step_no', 7)->first();
+            )->where('step_no', 9)->first();
 
-            if ($step7 && $step7->status !== 'completed') {
-                $step7->update([
+            if ($step9 && $step9->status !== 'completed') {
+                $step9->update([
                     'status'       => 'completed',
                     'completed_at' => now(),
                     'completed_by' => Auth::id(),

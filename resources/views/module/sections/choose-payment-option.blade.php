@@ -21,7 +21,7 @@
             <div class="col-lg-6">
 
                 <form method="POST"
-                    action="{{ '#' }}">
+                    action="{{ route('allottees.payment-option', $allottee->id) }}">
                     @csrf
                     <input type="hidden"
                         name="payment_option"
@@ -81,7 +81,7 @@
             <div class="col-lg-6">
 
                 <form method="POST"
-                    action="{{ '#' }}">
+                    action="{{ route('allottees.payment-option', $allottee->id) }}">
                     @csrf
                     <input type="hidden"
                         name="payment_option"
