@@ -54,6 +54,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/signed/document/uploads', [\App\Http\Controllers\Admin\AllotteeController::class, 'signedDocumentUploads'])->name('allottee.signed.document.uploads');
     Route::post('/emi-process-payment/{allottee}', [\App\Http\Controllers\Admin\AllotteeEmiController::class, 'processPayment'])->name('allottee.emi.process-payment');
     
+    Route::post('/allottees/{allottee}/payment-option', [\App\Http\Controllers\Admin\AllotteeController::class, 'updatePaymentOption'])->name('allottees.payment-option');
+
     Route::get('/payment/success/{id}', [\App\Http\Controllers\Admin\AllotteePaymentController::class, 'paymentSuccess'])->name('modules.payment.success');
 
     Route::get('/{blade}', [\App\Http\Controllers\DashboardController::class, 'section'])->name('dashboard.section');
