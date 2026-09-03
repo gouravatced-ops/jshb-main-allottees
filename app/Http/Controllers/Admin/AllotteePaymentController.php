@@ -386,9 +386,9 @@ class AllotteePaymentController extends Controller
             // 2. Upload to Document API
             $allottee = $payment->allottee;
             $scheme = $allottee->scheme ?? null;
-            $yyyy = date('Y');
-            $mm = date('m');
-            $dd = date('d');
+            $yyyy = $allottee->allotment_year;
+            $mm = $allottee->allotment_month;
+            $dd = $allottee->allotment_day;
 
             $extraData = [
                 'application_for' => 'one_time_payment',
