@@ -6,6 +6,15 @@
         <p>Your user account is not currently linked to an active allottee profile.</p>
     </div>
     @else
+
+    {{-- Success Message --}}
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-check-circle me-2"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Hero Section -->
     <div class="dashboard-hero-card" style="background: linear-gradient(135deg, #0d6e55, #0a3d31); border-radius: 8px; padding: 20px; color: white; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
@@ -40,16 +49,16 @@
 
     @php
     $totalPaid = $allottee->allotteeTransaction()->where('payment_status', 'success')->sum('amount') ?? 0;
-    
+
     $outstandingPayment = \App\Models\AllotteePaymentOrder::where('allottee_id', $allottee->id)
     ->where('order_type', 'allotment')
     ->whereNotIn('order_status', ['paid', 'cancelled'])
     ->first();
-    
+
     $emiOutstanding = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->sum('outstanding_amount') ?? 0;
-    
+
     $outstandingDemand = $outstandingPayment ? $outstandingPayment->total_payable : $emiOutstanding;
-    
+
     $totalDocuments = $allottee->documentData()->count() + $allottee->generatedDocument()->count();
 
     $nextEmi = $allottee->emiDemand()->whereIn('demand_status', ['pending', 'partial', 'overdue'])->orderBy('due_date', 'asc')->first();
@@ -84,11 +93,11 @@
                     </div>
                     <div>
                         @if ($pendingApplication->currentStep && $pendingApplication->currentStep->step_code === 'agreement-allottee-upload')
-                            <a href="{{ route('dashboard.section', 'application') }}" class="btn btn-success fw-bold px-3 py-2">
-                                <i class="fa-solid fa-file-signature me-1"></i> Download & Upload Agreement
-                            </a>
+                        <a href="{{ route('dashboard.section', 'application') }}" class="btn btn-success fw-bold px-3 py-2">
+                            <i class="fa-solid fa-file-signature me-1"></i> Download & Upload Agreement
+                        </a>
                         @else
-                            <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 13px; font-weight: 600;">Processing</span>
+                        <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 13px; font-weight: 600;">Processing</span>
                         @endif
                     </div>
                 </div>
@@ -252,26 +261,26 @@
                         @endphp
 
                         @forelse($dashboardNotifications as $notif)
-                            @if($loop->first)
-                            <div class="list-group-item p-3 mb-2 rounded shadow-sm border-0" style="background: linear-gradient(to right, #fff8e1, #ffffff); border-left: 5px solid #ffc107 !important; position: relative; margin-top: 5px;">
-                                <div style="position: absolute; top: -10px; right: 15px; background: #ffc107; color: #000; padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                                    <i class="fa-solid fa-star me-1"></i> Latest
-                                </div>
-                                <div class="d-flex w-100 justify-content-between mb-1 mt-1">
-                                    <h6 class="mb-0 fw-bold" style="color: #b8860b;"><i class="fa-solid fa-bell-ring me-2"></i>{{ $notif->subject }}</h6>
-                                    <small class="text-muted" style="white-space: nowrap; font-weight: 500;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
-                                </div>
-                                <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
+                        @if($loop->first)
+                        <div class="list-group-item p-3 mb-2 rounded shadow-sm border-0" style="background: linear-gradient(to right, #fff8e1, #ffffff); border-left: 5px solid #ffc107 !important; position: relative; margin-top: 5px;">
+                            <div style="position: absolute; top: -10px; right: 15px; background: #ffc107; color: #000; padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                <i class="fa-solid fa-star me-1"></i> Latest
                             </div>
-                            @else
-                            <div class="list-group-item p-3 {{ !$notif->is_read ? 'bg-light' : '' }}" style="{{ !$notif->is_read ? 'border-left: 4px solid #ffc107 !important; border-top: none; border-right: none; border-bottom: 1px solid rgba(0,0,0,.125);' : 'border-bottom: 1px solid rgba(0,0,0,.125); border-left: none; border-top: none; border-right: none;' }}">
-                                <div class="d-flex w-100 justify-content-between mb-1">
-                                    <h6 class="mb-0 fw-bold text-dark">{{ $notif->subject }}</h6>
-                                    <small class="text-muted" style="white-space: nowrap;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
-                                </div>
-                                <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
+                            <div class="d-flex w-100 justify-content-between mb-1 mt-1">
+                                <h6 class="mb-0 fw-bold" style="color: #b8860b;"><i class="fa-solid fa-bell-ring me-2"></i>{{ $notif->subject }}</h6>
+                                <small class="text-muted" style="white-space: nowrap; font-weight: 500;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
                             </div>
-                            @endif
+                            <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
+                        </div>
+                        @else
+                        <div class="list-group-item p-3 {{ !$notif->is_read ? 'bg-light' : '' }}" style="{{ !$notif->is_read ? 'border-left: 4px solid #ffc107 !important; border-top: none; border-right: none; border-bottom: 1px solid rgba(0,0,0,.125);' : 'border-bottom: 1px solid rgba(0,0,0,.125); border-left: none; border-top: none; border-right: none;' }}">
+                            <div class="d-flex w-100 justify-content-between mb-1">
+                                <h6 class="mb-0 fw-bold text-dark">{{ $notif->subject }}</h6>
+                                <small class="text-muted" style="white-space: nowrap;">{{ $notif->created_at ? $notif->created_at->diffForHumans() : '' }}</small>
+                            </div>
+                            <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($notif->message, 120) }}</p>
+                        </div>
+                        @endif
                         @empty
                         <div class="list-group-item p-4 text-center text-muted">
                             <i class="fa-regular fa-bell-slash fs-3 mb-2 opacity-50"></i>
@@ -281,11 +290,10 @@
                     </div>
                 </div>
             </div>
-            
+
             <script>
                 window.calendarNotifications = [
-                    @foreach($dashboardNotifications as $notif)
-                    {
+                    @foreach($dashboardNotifications as $notif) {
                         date: "{{ $notif->created_at ? $notif->created_at->format('Y-m-d') : '' }}",
                         subject: "{{ addslashes($notif->subject) }}"
                     },
@@ -371,7 +379,7 @@
                         <span>{{ $nextEmi->due_date ? \Carbon\Carbon::parse($nextEmi->due_date)->format('d M Y') : 'N/A' }}</span>
                     </div>
 
-                    <button class="btn btn-danger w-100 fw-bold" onclick="App.loadStep(8, null)">Pay Now</button>
+                    <a href="{{ route('dashboard.section', 'monthly-emi') }}" class="btn btn-danger w-100 fw-bold">Pay Now</a>
                 </div>
             </div>
             @endif

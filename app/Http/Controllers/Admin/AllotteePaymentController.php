@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use App\Traits\DocumentUploadTrait;
+use App\Services\NotificationService;
+use App\Models\AllotteeLedger;
 use NumberFormatter;
 
 class AllotteePaymentController extends Controller
@@ -125,9 +127,9 @@ class AllotteePaymentController extends Controller
                 now()->format('YmdHis') . '-' .
                 rand(1000, 9999) .
                 '.pdf';
-            
+
             $pdfContent = $pdf->output();
-            
+
             file_put_contents(
                 $directory . '/' . $fileName,
                 $pdfContent
@@ -210,6 +212,27 @@ class AllotteePaymentController extends Controller
                 'step_no'     => 7,
             ])->update([
                 'status' => 'pending',
+            ]);
+
+            // UPDATE ALLOTTEE LEDGER
+            $lastLedger = AllotteeLedger::where('allottee_id', $payment->allottee_id)->orderBy('id', 'desc')->first();
+            $runningBalance = ($lastLedger->running_balance ?? 0) - $payment->total_payable;
+
+            AllotteeLedger::create([
+                'allottee_id'      => $payment->allottee_id,
+                'payment_id'       => $payment->id,
+                'order_id'         => $payment->id,
+                'transaction_date' => now(),
+                'transaction_type' => 'allotment_payment',
+                'transaction_mode' => 'gateway',
+                'description'      => 'Allotment Payment Received',
+                'debit_amount'     => 0,
+                'credit_amount'    => $payment->total_payable,
+                'running_principal' => 0,
+                'running_balance'  => $runningBalance,
+                'reference_no'     => $transactionNo,
+                'remarks'          => 'Initial allotment payment',
+                'created_by'       => Auth::id()
             ]);
 
             DB::commit();
@@ -352,9 +375,9 @@ class AllotteePaymentController extends Controller
                 now()->format('YmdHis') . '-' .
                 rand(1000, 9999) .
                 '.pdf';
-                
+
             $pdfContent = $pdf->output();
-            
+
             file_put_contents(
                 $directory . '/' . $fileName,
                 $pdfContent
@@ -430,6 +453,69 @@ class AllotteePaymentController extends Controller
                     'completed_at' => $now,
                     'completed_by' => $userId,
                 ]);
+
+            // --- SEND NOTIFICATIONS ---
+            try {
+                $allotteeFullName = trim(($allottee->prefix ?? '') . ' ' . ($allottee->allottee_name ?? '') . ' ' . ($allottee->allottee_surname ?? ''));
+                $amountPaid = number_format($payment->paid_amount, 2);
+                $propertyNo = $allottee->property_number ?? 'N/A';
+
+                // 1. To Allottee
+                $msgAllottee = "Dear {$allotteeFullName},\n\n";
+                $msgAllottee .= "We have successfully received your One-Time Payment.\n";
+                $msgAllottee .= "Property No: {$propertyNo}\n";
+                $msgAllottee .= "Amount Paid: ₹{$amountPaid}\n";
+                $msgAllottee .= "Transaction No: {$transactionNo}\n\n";
+                $msgAllottee .= "Regards,\nJharkhand State Housing Board";
+
+                app(\App\Services\NotificationService::class)->send([
+                    'user_id' => $allottee->user_id,
+                    'notification_type' => 'success',
+                    'subject' => "One Time Payment Successful - {$propertyNo}",
+                    'message' => $msgAllottee,
+                    'is_allottee' => true,
+                ]);
+
+                // 2. To System
+                $msgSystem = "System Alert: One Time Payment Received\n\n";
+                $msgSystem .= "Allottee Name: {$allotteeFullName}\n";
+                $msgSystem .= "Property No: {$propertyNo}\n";
+                $msgSystem .= "Amount Paid: ₹{$amountPaid}\n";
+                $msgSystem .= "Transaction No: {$transactionNo}\n";
+                $msgSystem .= "Payment Date: " . now()->format('d M Y h:i A') . "\n";
+
+                app(\App\Services\NotificationService::class)->send([
+                    'email_id' => env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in'),
+                    'notification_type' => 'info',
+                    'subject' => "One Time Payment Received - {$propertyNo}",
+                    'message' => $msgSystem,
+                    'is_allottee' => false,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send one-time payment notification: ' . $e->getMessage());
+            }
+            // --- END NOTIFICATIONS ---
+
+            // UPDATE ALLOTTEE LEDGER
+            $lastLedger = AllotteeLedger::where('allottee_id', $payment->allottee_id)->orderBy('id', 'desc')->first();
+            $runningBalance = ($lastLedger->running_balance ?? 0) - $payment->total_payable;
+
+            AllotteeLedger::create([
+                'allottee_id'      => $payment->allottee_id,
+                'payment_id'       => $payment->id,
+                'order_id'         => $payment->id,
+                'transaction_date' => now(),
+                'transaction_type' => 'one_time_payment',
+                'transaction_mode' => 'gateway',
+                'description'      => 'One Time Payment Received',
+                'debit_amount'     => 0,
+                'credit_amount'    => $payment->total_payable,
+                'running_principal' => 0,
+                'running_balance'  => $runningBalance,
+                'reference_no'     => $transactionNo,
+                'remarks'          => 'One time clearance payment',
+                'created_by'       => Auth::id()
+            ]);
 
             DB::commit();
             return response()->json([

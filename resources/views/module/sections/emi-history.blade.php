@@ -134,8 +134,6 @@ $txn->demand = \App\Models\AllotteeMonthlyDemand::find($txn->demand_id);
 
                             <th>Penalty</th>
 
-                            <th>Admin</th>
-
                             <th>Total Paid</th>
 
                             <th>Payment Mode</th>
@@ -221,10 +219,6 @@ $txn->demand = \App\Models\AllotteeMonthlyDemand::find($txn->demand_id);
                             </td>
 
                             <td>
-                                ₹ {{ number_format($txn->admin_charge, 2) }}
-                            </td>
-
-                            <td>
                                 <strong>
                                     ₹ {{ number_format($txn->total_amount, 2) }}
                                 </strong>
@@ -280,6 +274,16 @@ $txn->demand = \App\Models\AllotteeMonthlyDemand::find($txn->demand_id);
                                     class="btn btn-sm btn-outline-primary">
 
                                     <i class="fa-solid fa-file-pdf"></i>
+
+                                </a>
+                                @else
+                                —
+                                @endif
+                                @if ($txn->payment_file_path)
+                                <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->payment_file_path , '/')]) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-success">
+
+                                    <i class="fa-solid fa-file-image"></i>
 
                                 </a>
                                 @else

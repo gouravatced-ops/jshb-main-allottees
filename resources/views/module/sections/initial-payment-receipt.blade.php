@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>झारखण्ड राज्य आवास बोर्ड - भुगतान रसीद </title>
+    <title>झारखण्ड राज्य आवास बोर्ड - {{ $payment->order_type == 'final' ? 'One Time ' : '' }}भुगतान रसीद </title>
     <style>
         @font-face {
             font-family: 'KrutiDev';
@@ -62,7 +62,7 @@
                 <div
                     style="font-size: 16px; font-weight: bold; color: #e67e22; background: #fef5e8; padding: 2px 10px; border-radius: 25px; display: inline-block;">
                     PAID</div>
-                <div style="font-size: 9px; color: #777;">Payment Receipt</div>
+                <div style="font-size: 9px; color: #777;">{{ $payment->order_type == 'final' ? 'One Time Payment Receipt' : 'Payment Receipt' }}</div>
             </td>
         </tr>
     </table>
@@ -74,12 +74,14 @@
             <td style="width: 50%;">
                 <div style="font-size: 9px; color: #5a6e7a; letter-spacing: 0.5px;">TRANSACTION NUMBER</div>
                 <div style="font-size: 14px; font-weight: bold; color: #0f4c5f; font-family: monospace;">
-                    {{ $payment->transaction_no ?? '-' }}</div>
+                    {{ $payment->transaction_no ?? '-' }}
+                </div>
             </td>
             <td style="width: 50%; text-align: right;">
                 <div style="font-size: 9px; color: #5a6e7a;">PAYMENT DATE & TIME</div>
                 <div style="font-size: 12px; font-weight: bold; color: #0f4c5f;">
-                    {{ $payment->paid_date?->format('d-m-Y h:i A') ?? 'N/A' }}</div>
+                    {{ $payment->paid_date?->format('d-m-Y h:i A') ?? 'N/A' }}
+                </div>
             </td>
         </tr>
     </table>
@@ -131,17 +133,20 @@
             <td style="border: 1px solid #e2e8f0; padding: 6px 8px; background: #f9fafb; width: 60%;">Property Amount
             </td>
             <td style="border: 1px solid #e2e8f0; padding: 6px 8px; text-align: right; font-weight: 600;">₹
-                {{ number_format($payment->property_amount, 2) }}</td>
+                {{ number_format($payment->property_amount, 2) }}
+            </td>
         </tr>
         <tr>
-            <td style="border: 1px solid #e2e8f0; padding: 6px 8px; background: #f9fafb;">Allotment Amount</td>
+            <td style="border: 1px solid #e2e8f0; padding: 6px 8px; background: #f9fafb;">{{ $payment->order_type == 'final' ? 'One Time Payment Amount' : 'Allotment Amount' }}</td>
             <td style="border: 1px solid #e2e8f0; padding: 6px 8px; text-align: right; font-weight: 600;">₹
-                {{ number_format($payment->paid_amount, 2) }}</td>
+                {{ number_format($payment->paid_amount, 2) }}
+            </td>
         </tr>
         <tr>
             <td style="border: 1px solid #e2e8f0; padding: 6px 8px; background: #f9fafb;">Penalty Amount</td>
             <td style="border: 1px solid #e2e8f0; padding: 6px 8px; text-align: right; font-weight: 600;">₹
-                {{ number_format($payment->penalty_amount, 2) }}</td>
+                {{ number_format($payment->penalty_amount, 2) }}
+            </td>
         </tr>
         <tr style="background: #fef5e8;">
             <td style="border: 1px solid #e2e8f0; padding: 8px; font-weight: bold; font-size: 12px;">TOTAL PAID AMOUNT
@@ -160,7 +165,7 @@
         {{-- <div style="margin-top: 3px;">
             <strong class="hindi-text" style="color: #0f4c5f;">jkf'k 'kCnksa esa %</strong>
             <span class="hindi-text" style="font-size: 14px;">{{ $amountInHindi ?? '' }}</span>
-        </div> --}}
+    </div> --}}
     </div>
 
     {{-- ================= SIGNATURE & STAMP (COMPACT) ================= --}}

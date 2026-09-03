@@ -9,6 +9,7 @@ use App\Models\AllotteeGeneratedDocument;
 use App\Models\AllotteeMonthlyDemand;
 use App\Models\AllotteeTransaction;
 use App\Services\EmiCalculatorService;
+use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,14 +17,43 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Traits\DocumentUploadTrait;
 
 class AllotteeEmiController extends Controller
 {
+    use DocumentUploadTrait;
+
     protected $emiService;
 
     public function __construct(EmiCalculatorService $emiService)
     {
         $this->emiService = $emiService;
+    }
+
+    private function renderDashboardView(Allottee $allottee, $blade, $additionalData = [])
+    {
+        $user = Auth::user() ?? $allottee->user;
+        $latestLogin = $user ? $user->loginLogs()->latest()->first() : null;
+
+        // Make sure process step service is available if needed, or simply fetch steps
+        $steps = $allottee->processSteps()->orderBy('step_no')->get();
+        $step = $steps->firstWhere('blade', $blade);
+
+        $pendingApplication = \App\Models\Application::where('allottee_id', $allottee->id)
+            ->whereIn('status', ['pending', 'in_progress', 'forwarded'])
+            ->first();
+
+        $viewData = array_merge([
+            'user' => $user,
+            'allottee' => $allottee,
+            'latestLogin' => $latestLogin,
+            'steps' => $steps,
+            'blade' => $blade,
+            'step' => $step,
+            'pendingApplication' => $pendingApplication,
+        ], $additionalData);
+
+        return view('module.dashboard', $viewData);
     }
 
     /**
@@ -46,7 +76,7 @@ class AllotteeEmiController extends Controller
             }
         }
 
-        return view('admin.allottee.sections.emi-dashboard', compact('allottee', 'emiAccount', 'demands', 'paidDemands', 'pendingDemands', 'nextDemand'));
+        return $this->renderDashboardView($allottee, 'emi-dashboard', compact('emiAccount', 'demands', 'paidDemands', 'pendingDemands', 'nextDemand'));
     }
 
     /**
@@ -62,7 +92,7 @@ class AllotteeEmiController extends Controller
             $demands = collect();
         }
 
-        return view('admin.allottee.sections.emi-schedule', compact('allottee', 'emiAccount', 'demands'));
+        return $this->renderDashboardView($allottee, 'emi-schedule', compact('emiAccount', 'demands'));
     }
 
     /**
@@ -87,7 +117,7 @@ class AllotteeEmiController extends Controller
             }
         }
 
-        return view('admin.allottee.sections.monthly-emi', compact('allottee', 'currentDemand'));
+        return $this->renderDashboardView($allottee, 'monthly-emi', compact('currentDemand'));
     }
 
     /**
@@ -121,7 +151,7 @@ class AllotteeEmiController extends Controller
             }
         }
 
-        return view('admin.allottee.sections.emi-history', compact('allottee', 'transactions', 'totalPaid', 'totalEmiPaid', 'lastPayment'));
+        return $this->renderDashboardView($allottee, 'emi-history', compact('transactions', 'totalPaid', 'totalEmiPaid', 'lastPayment'));
     }
 
     /**
@@ -133,9 +163,15 @@ class AllotteeEmiController extends Controller
             'demand_id' => 'required|exists:allottee_emi_demands,id',
             'amount' => 'required|numeric|min:1',
             'payment_mode' => 'required|in:cash,cheque,dd,upi,netbanking,gateway',
-            'transaction_no' => 'nullable|string|max:255',
+            'transaction_no' => 'required_unless:payment_mode,gateway|string|max:255',
             'utr_no' => 'nullable|string|max:255',
+            'receipt_path' => 'required_unless:payment_mode,gateway|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ]);
+
+        $receiptPath = null;
+        if ($request->hasFile('receipt_path')) {
+            $receiptPath = $request->file('receipt_path')->store('payment_receipts', 'public');
+        }
 
         Log::info('EMI Payment request received', [
             'allottee_id' => $allottee->id,
@@ -144,6 +180,7 @@ class AllotteeEmiController extends Controller
             'payment_mode' => $request->input('payment_mode'),
             'transaction_no' => $request->input('transaction_no'),
             'utr_no' => $request->input('utr_no'),
+            'has_receipt' => $request->hasFile('receipt_path'),
         ]);
 
         try {
@@ -167,9 +204,9 @@ class AllotteeEmiController extends Controller
                     'penalty_admin_charges' => $demand->penalty_admin_charges,
                 ]);
 
-                // Refresh penalty before payment
-                $this->emiService->refreshPenalty($demand);
-                $demand->refresh();
+                // User request: Do not update penalty columns at the time of payment
+                // $this->emiService->refreshPenalty($demand);
+                // $demand->refresh();
 
                 Log::info('EMI Payment demand refreshed', [
                     'demand_id' => $demand->id,
@@ -187,26 +224,58 @@ class AllotteeEmiController extends Controller
                 $emiAccount = $demand->emiAccount;
                 $emiAccount->refresh();
 
+                $yyyy = $allottee->allotment_year ?? date('Y');
+                $mm = $allottee->allotment_month ?? date('m');
+                $dd = $allottee->allotment_day ?? date('d');
+                $propertyNumber = $allottee->property_number ?? 'PROP';
+
+                $extraData = [
+                    'division_code' => $allottee->division->division_code ?? '',
+                    'subdivision_code' => $allottee->subDivision->subdivision_code ?? '',
+                    'property_category' => $allottee->propertyCategory->category_code ?? '',
+                    'property_type' => $allottee->propertyType->type_code ?? '',
+                    'property_income' => $allottee->quarterType->quarter_code ?? '',
+                    'username' => $allottee->username ?? ''
+                ];
+
+                $receiptPath = null;
+                $receiptFileName = null;
+                if ($request->hasFile('receipt_path')) {
+                    $uploadResultSS = $this->uploadToDocumentApi(
+                        $request->file('receipt_path'),
+                        'FINAL-EMI-PAY-SS',
+                        null, // $schemeCode
+                        $propertyNumber,
+                        $yyyy,
+                        $mm,
+                        $dd,
+                        null,
+                        array_merge($extraData, ['document_name' => 'emi_payment_screenshot'])
+                    );
+                    $receiptPath = $uploadResultSS['file_path'] ?? null;
+                    $receiptFileName = $uploadResultSS['file_name'] ?? null;
+                }
+
                 // Generate transaction number
                 $transactionNo = $validated['transaction_no'] ?? 'TXN-' . strtoupper(uniqid());
 
                 // Create transaction record using allocation from service
                 $transaction = AllotteeTransaction::create([
                     'allottee_id' => $allottee->id,
+                    'order_id' => $emiAccount->order_id,
                     'demand_id' => $demand->id,
-                    'order_id' => $demand->order_id,
                     'transaction_type' => 'emi_payment',
-                    'payment_stage' => 'emi',
                     'amount' => $allocation['paid_amount'],
                     'principal_amount' => $allocation['principal_paid'],
                     'interest_amount' => $allocation['interest_paid'],
                     'penalty_amount' => $allocation['penalty_paid'],
-                    'admin_charge' => $demand->penalty_admin_charges,
                     'total_amount' => $allocation['paid_amount'],
                     'payment_mode' => $validated['payment_mode'],
                     'payment_status' => 'success',
                     'transaction_no' => $transactionNo,
                     'utr_no' => $validated['utr_no'] ?? null,
+                    'payment_file_name' => $receiptFileName,
+                    'payment_file_path' => $receiptPath,
                     'payment_day' => now()->day,
                     'payment_month' => now()->month,
                     'payment_year' => now()->year,
@@ -224,7 +293,7 @@ class AllotteeEmiController extends Controller
 
                 // GENERATE RECEIPT PDF
                 $pdf = Pdf::loadView(
-                    'admin.allottee.sections.emi-payment-receipt',
+                    'module.sections.emi-payment-receipt',
                     compact(
                         'demand',
                         'transaction',
@@ -242,27 +311,25 @@ class AllotteeEmiController extends Controller
                         'chroot' => public_path(),
                     ]);
 
-                // RECEIPT FOLDER
-                $folder = implode('/', [
-                    'documents',
-                    'allottee',
-                    'payment',
-                    'emi',
-                    now()->format('Y'),
-                    now()->format('m'),
-                    now()->format('d'),
-                ]);
-                $directory = public_path($folder);
-                File::ensureDirectoryExists($directory, 0755, true);
-
-                // RECEIPT FILE
+                $pdfContent = $pdf->output();
                 $fileName = 'emi-payment-receipt-' . $demand->id . '-' . now()->format('YmdHis') . '-' . rand(1000, 9999) . '.pdf';
-                file_put_contents($directory . '/' . $fileName, $pdf->output());
 
-                // UPDATE TRANSACTION RECEIPT
+                $uploadResultPdf = $this->uploadContentToDocumentApi(
+                    $pdfContent,
+                    $fileName,
+                    'FINAL-EMI',
+                    null, // $schemeCode
+                    $propertyNumber,
+                    $yyyy,
+                    $mm,
+                    $dd,
+                    array_merge($extraData, ['document_name' => 'emi_payment_receipt'])
+                );
+
+                // UPDATE TRANSACTION RECEIPT (PDF)
                 $transaction->update([
-                    'receipt_file' => $fileName,
-                    'receipt_path' => $folder . '/' . $fileName,
+                    'receipt_file' => $uploadResultPdf['file_name'],
+                    'receipt_path' => $uploadResultPdf['file_path'],
                 ]);
 
                 // SAVE GENERATED DOCUMENT
@@ -270,10 +337,12 @@ class AllotteeEmiController extends Controller
                     'allottee_id'    => $allottee->id,
                     'document_name'  => 'EMI Payment Receipt - ' . $emiMonth,
                     'document_type'  => 'emi-payment-receipt',
-                    'file_name'      => $fileName,
-                    'file_path'      => $folder . '/' . $fileName,
+                    'file_name'      => $uploadResultPdf['file_name'],
+                    'file_path'      => $uploadResultPdf['file_path'],
                     'generated_by'   => Auth::id(),
                     'generated_at'   => now(),
+                    'issue_date'     => now()->format('Y-m-d'),
+                    'document_number' => $allottee->allotment_no ?? ($allottee->application->application_no ?? '')
                 ]);
                 // --- END RECEIPT GENERATION ---
 
@@ -281,6 +350,61 @@ class AllotteeEmiController extends Controller
                     ->whereIn('demand_status', ['Pending', 'Partially Paid', 'Overdue'])
                     ->orderBy('emi_no')
                     ->first();
+
+                // --- SEND NOTIFICATION ---
+                try {
+                    $emiMonthName = Carbon::parse($demand->due_date)->format('F');
+                    $emiYear = Carbon::parse($demand->due_date)->format('Y');
+
+                    $allotteeFullName = trim(($allottee->allottee_name ?? '') . ' ' . ($allottee->allottee_surname ?? ''));
+                    $message = "Dear {$allotteeFullName},\n";
+                    $message .= "Property No: " . $allottee->property_number . "\n\n";
+                    $message .= "You have successfully paid the EMI for {$emiMonthName} {$emiYear}.\n";
+                    $message .= "Amount Paid: ₹" . number_format($allocation['paid_amount'], 2) . "\n";
+                    $message .= "Transaction No: " . $transactionNo . "\n\n";
+
+                    if ($nextDemand) {
+                        $nextMonth = Carbon::parse($nextDemand->due_date)->format('F Y');
+                        $nextDueDate = Carbon::parse($nextDemand->due_date)->format('d M Y');
+                        $message .= "Note: Your next EMI for {$nextMonth} is due on {$nextDueDate}.\n\n";
+                    }
+
+                    $message .= "Regards,\nJharkhand State Housing Board";
+
+                    app(NotificationService::class)->send([
+                        'user_id' => $allottee->user_id,
+                        'notification_type' => 'success',
+                        'subject' => "EMI Payment Successful - {$emiMonthName} {$emiYear}",
+                        'message' => $message,
+                        'is_allottee' => true,
+                    ]);
+
+                    // Send email to system if this was the last EMI
+                    if (!$nextDemand && $emiAccount->remaining_amount <= 0.01) {
+                        $msgSystem = "System Alert: Allottee EMI Completed\n\n";
+                        $msgSystem .= "Allottee Name: {$allotteeFullName}\n";
+                        $msgSystem .= "Property No: " . ($allottee->property_number ?? 'N/A') . "\n";
+                        $msgSystem .= "Last EMI Paid For: {$emiMonthName} {$emiYear}\n";
+                        $msgSystem .= "Amount Paid: ₹" . number_format($allocation['paid_amount'], 2) . "\n";
+                        $msgSystem .= "Transaction No: {$transactionNo}\n";
+                        $msgSystem .= "Completion Date: " . now()->format('d M Y h:i A') . "\n\n";
+                        $msgSystem .= "The EMI schedule for this allottee is now fully paid and closed.";
+
+                        app(NotificationService::class)->send([
+                            'email_id' => env('MAIL_SYSTEM_USERNAME', 'system@adms.jshb.computered.co.in'),
+                            'notification_type' => 'info',
+                            'subject' => "EMI Completed - Property " . ($allottee->property_number ?? 'N/A'),
+                            'message' => $msgSystem,
+                            'is_allottee' => false,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to send EMI payment notification: ' . $e->getMessage());
+                }
+                // --- END NOTIFICATION ---
+
+                // Sync EMI Ledger
+                app(EmiCalculatorService::class)->syncEmiLedger($emiAccount->id);
 
                 return [
                     'success' => true,
@@ -290,7 +414,7 @@ class AllotteeEmiController extends Controller
                     'has_next_demand' => $nextDemand !== null,
                     'account_status' => $emiAccount->account_status,
                     'remaining_amount' => $emiAccount->remaining_amount,
-                    'receipt_url' => asset($folder . '/' . $fileName),
+                    'receipt_url' => $uploadResultPdf['file_name'] . '/' . $uploadResultPdf['file_path'],
                 ];
             });
 
@@ -298,7 +422,7 @@ class AllotteeEmiController extends Controller
                 return response()->json($result);
             }
 
-            return redirect()->route('admin.allottee.emi.pay', $allottee)
+            return redirect()->route('allottee.emi.dashboard', $allottee)
                 ->with('success', $result['message']);
         } catch (\Throwable $e) {
             Log::error('EMI Payment failed', [
@@ -387,7 +511,7 @@ class AllotteeEmiController extends Controller
                 ]);
             });
 
-            return redirect()->route('admin.allottee.emi.dashboard', $allottee)
+            return redirect()->route('allottee.emi.dashboard', $allottee)
                 ->with('success', 'Pre-payment of ₹ ' . number_format($validated['amount'], 2) . ' processed successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -449,7 +573,7 @@ class AllotteeEmiController extends Controller
                 ]);
             });
 
-            return redirect()->route('admin.allottee.emi.dashboard', $allottee)
+            return redirect()->route('allottee.emi.dashboard', $allottee)
                 ->with('success', 'Loan account closed successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -474,9 +598,15 @@ class AllotteeEmiController extends Controller
             ->orderBy('paid_at')
             ->get();
 
-        // Generate PDF (you can implement PDF generation here)
-        // For now, just return a view
-        return view('admin.allottee.sections.emi-statement-pdf', compact('allottee', 'emiAccount', 'demands', 'transactions'));
+        // Generate PDF directly via dompdf
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('module.sections.emi-statement-pdf', compact('allottee', 'emiAccount', 'demands', 'transactions'));
+        $pdf->getDomPDF()->getOptions()->set('isRemoteEnabled', true);
+
+        // Encrypt the PDF to prevent editing (allows printing only)
+        $pdf->setEncryption('', uniqid(), ['print']);
+
+        $fileName = 'emi_statement_' . date('Ymd-His') . '.pdf';
+        return $pdf->download($fileName);
     }
 
     /**

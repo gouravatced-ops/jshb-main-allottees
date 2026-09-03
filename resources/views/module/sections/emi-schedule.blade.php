@@ -148,8 +148,12 @@
                                     </td>
 
                                     <td class="text-danger">
-                                        ₹
-                                        {{ number_format($demand->late_fine_penalty + $demand->penalty_interest_amount, 2) }}
+                                        @if($demand->late_fine_penalty > 0 || $demand->penalty_interest_amount > 0)
+                                            <div style="font-size: 11px;">Int: ₹ {{ number_format($demand->penalty_interest_amount, 2) }}</div>
+                                            <div style="font-size: 11px;">Fine: ₹ {{ number_format($demand->late_fine_penalty, 2) }}</div>
+                                        @else
+                                            ₹ 0.00
+                                        @endif
                                     </td>
 
                                     <td>
@@ -173,6 +177,11 @@
                                                 <span class="badge bg-success">
                                                     Paid
                                                 </span>
+                                                @if($demand->late_fine_penalty > 0 || $demand->penalty_interest_amount > 0)
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger" style="font-size:10px;">Paid Late</span>
+                                                </div>
+                                                @endif
                                             @break
 
                                             @case('Partially Paid')

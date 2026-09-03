@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>403 | Permission Denied | {{ config('panel.portal_name') ?? 'Jharkhand Housing Board' }}</title>
-    <meta name="description" content="Permission Denied - 403" />
+    <title>404 | Page Not Found | {{ config('panel.portal_name') ?? 'Jharkhand State Housing Board' }}</title>
+    <meta name="description" content="Page Not Found - 404" />
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset(config('panel.faviconIcon')) }}">
     <link rel="stylesheet" href="{{ asset('css/font/font.css') }}">
     <link rel="stylesheet" href="{{ asset('css/icons/all.css') }}">
@@ -15,8 +15,6 @@
             font-size: 72px;
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
-            color: #b91c1c;
-            /* Maroon/Red tint for error */
             line-height: 1;
             margin-bottom: 10px;
         }
@@ -34,9 +32,8 @@
             line-height: 1.6;
             margin-bottom: 25px;
             padding: 15px;
-            background: #fef2f2;
             border-radius: 8px;
-            border: 1px solid #fecaca;
+            border: 1px solid transparent;
         }
 
         .action-buttons {
@@ -105,34 +102,33 @@
                     @if(config('panel.govermentLogo'))
                     <img src="{{ asset(config('panel.govermentLogo')) }}" alt="State Government Logo" style="height: 60px; margin-right: 15px;" onerror="this.style.display='none'">
                     @endif
-                    <div class="ref-portal-badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Access Denied
+                    <div class="ref-portal-badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
+                        <i class="fa-solid fa-map-location-dot"></i> Route Not Found
                     </div>
                 </div>
             </div>
 
             <div class="ref-content">
                 <div class="ref-content-left">
-                    <h3 style="color: #b91c1c;"><i class="fa-solid fa-shield-halved"></i> सुरक्षा और अनुमतियाँ (Security & Permissions)</h3>
+                    <h3 style="color: #ea580c;"><i class="fa-solid fa-circle-exclamation"></i> पृष्ठ नहीं मिला (Page Not Found)</h3>
                     <ul style="margin-top: 15px;">
-                        <li>आपने जिस पेज को खोलने का प्रयास किया है, उस तक पहुँचने की अनुमति (Permission) आपके पास नहीं है।</li>
-                        <li>संभवतः आपका लॉगिन सेशन समाप्त हो गया है या आप गलत भूमिका (Role) से लॉगिन हैं।</li>
-                        <li>पोर्टल की सुरक्षा सुनिश्चित करने के लिए केवल अधिकृत उपयोगकर्ताओं को ही विशिष्ट पृष्ठों तक पहुँच दी जाती है।</li>
-                        <li>यदि आपको लगता है कि यह एक तकनीकी त्रुटि है, तो कृपया अपने सिस्टम एडमिनिस्ट्रेटर से संपर्क करें।</li>
-                        <li>सही डैशबोर्ड पर जाने के लिए दाईं ओर दिए गए बटन का प्रयोग करें।</li>
-                        <li>अन्य सहायता के लिए कृपया बोर्ड कार्यालय में संपर्क करें।</li>
+                        <li>आप जिस पृष्ठ (Page) को खोजने का प्रयास कर रहे हैं वह उपलब्ध नहीं है।</li>
+                        <li>संभवतः आपने गलत URL (Route) दर्ज किया है या वह पृष्ठ हटा दिया गया है।</li>
+                        <li>कृपया सुनिश्चित करें कि आपने सही वेब पता (Address) टाइप किया है।</li>
+                        <li>अपने सही डैशबोर्ड पर वापस जाने के लिए दाईं ओर दिए गए "Return to Dashboard" बटन का प्रयोग करें।</li>
+                        <li>यदि यह समस्या बनी रहती है, तो कृपया सपोर्ट टीम से संपर्क करें।</li>
                     </ul>
                 </div>
 
                 <div class="ref-divider"></div>
 
                 <div class="ref-content-right" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-                    <div class="error-code">403</div>
-                    <div class="error-title">Permission Denied</div>
+                    <div class="error-code" style="color: #ea580c;">404</div>
+                    <div class="error-title">Page Not Found</div>
 
-                    <div class="error-desc">
-                        <i class="fa-solid fa-lock" style="font-size: 20px; display: block; margin-bottom: 10px; color: #dc2626;"></i>
-                        You do not have the required permissions to view this directory or page using the credentials that you supplied.
+                    <div class="error-desc" style="background: #fff7ed; border-color: #ffedd5;">
+                        <i class="fa-solid fa-compass" style="font-size: 20px; display: block; margin-bottom: 10px; color: #ea580c;"></i>
+                        The page or route you are looking for does not exist. Please check the URL or return to the dashboard.
                     </div>
 
                     <div class="action-buttons" style="width: 100%;">

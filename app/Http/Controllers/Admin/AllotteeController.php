@@ -1229,9 +1229,28 @@ class AllotteeController extends Controller
                 ->update([
                     'status' => 'pending',
                 ]);
+
+            // SEND NOTIFICATION TO ALLOTTEE
+            try {
+                $allotteeFullName = trim(($allottee->allottee_name ?? '') . ' ' . ($allottee->allottee_surname ?? ''));
+                $paymentOptionText = $validated['payment_option'] === 'emi' ? 'EMI Payment' : 'One Time Payment';
+                $msgAllottee = "Dear {$allotteeFullName},\n\n";
+                $msgAllottee .= "Your payment option has been successfully updated to {$paymentOptionText}.\n";
+                $msgAllottee .= "Thank you,\nJharkhand State Housing Board";
+
+                app(\App\Services\NotificationService::class)->send([
+                    'user_id' => $allottee->user_id,
+                    'notification_type' => 'success',
+                    'subject' => "Payment Option Updated",
+                    'message' => $msgAllottee,
+                    'is_allottee' => true,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send payment option notification: ' . $e->getMessage());
+            }
         });
 
-        return back()->with(
+        return redirect()->route('dashboard')->with(
             'success',
             'Payment option updated successfully.'
         );
@@ -1254,8 +1273,8 @@ class AllotteeController extends Controller
 
             $emiService = app(EmiCalculatorService::class);
 
-            // Refresh penalty before payment
-            $emiService->refreshPenalty($demand);
+            // User request: Do not update penalty columns at the time of payment
+            // $emiService->refreshPenalty($demand);
 
             // Apply payment
             $emiService->applyPayment($demand, $validated['amount'], $validated['payment_mode']);

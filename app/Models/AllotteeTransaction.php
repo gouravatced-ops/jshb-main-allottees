@@ -28,6 +28,8 @@ class AllotteeTransaction extends Model
         'utr_no',
         'receipt_file',
         'receipt_path',
+        'payment_file_name',
+        'payment_file_path',
         'payment_day',
         'payment_month',
         'payment_year',
@@ -53,6 +55,11 @@ class AllotteeTransaction extends Model
             Allottee::class,
             'allottee_id'
         );
+    }
+
+    public function demand()
+    {
+        return $this->belongsTo(AllotteeMonthlyDemand::class, 'demand_id');
     }
 
     // Helpers
