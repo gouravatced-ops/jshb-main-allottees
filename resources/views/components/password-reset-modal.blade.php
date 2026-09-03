@@ -25,14 +25,19 @@
                     <label for="oldPassword" class="password-form-label">
                         <i class="fa-solid fa-key"></i> Current Password
                     </label>
-                    <input 
-                        type="password" 
-                        id="oldPassword" 
-                        name="old_password" 
-                        class="password-form-input"
-                        placeholder="Enter your current password"
-                        required
-                    >
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="oldPassword" 
+                            name="old_password" 
+                            class="password-form-input pr-5"
+                            placeholder="Enter your current password"
+                            required
+                        >
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('oldPassword', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                     <span class="password-form-error" id="oldPasswordError"></span>
                 </div>
 
@@ -41,14 +46,22 @@
                     <label for="newPassword" class="password-form-label">
                         <i class="fa-solid fa-lock"></i> New Password
                     </label>
-                    <input 
-                        type="password" 
-                        id="newPassword" 
-                        name="new_password" 
-                        class="password-form-input"
-                        placeholder="Enter new password (min. 8 characters)"
-                        required
-                    >
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="newPassword" 
+                            name="new_password" 
+                            class="password-form-input pr-5"
+                            placeholder="Enter new password (min. 8 characters)"
+                            required
+                        >
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-requirements" style="font-size: 11px; color: #6b7280; margin-top: 4px; margin-bottom: 4px; line-height: 1.4;">
+                        Must be at least 8 characters long and contain 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.
+                    </div>
                     <div class="password-strength-bar">
                         <div class="password-strength-fill" id="passwordStrengthFill"></div>
                     </div>
@@ -61,14 +74,19 @@
                     <label for="confirmPassword" class="password-form-label">
                         <i class="fa-solid fa-check"></i> Confirm Password
                     </label>
-                    <input 
-                        type="password" 
-                        id="confirmPassword" 
-                        name="new_password_confirmation" 
-                        class="password-form-input"
-                        placeholder="Confirm your new password"
-                        required
-                    >
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="new_password_confirmation" 
+                            class="password-form-input pr-5"
+                            placeholder="Confirm your new password"
+                            required
+                        >
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPassword', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                     <span class="password-form-error" id="confirmPasswordError"></span>
                 </div>
 
@@ -123,6 +141,23 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
 
 <style>
 .password-reset-modal {
@@ -258,6 +293,28 @@
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.password-form-input.pr-5 {
+    padding-right: 40px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+    color: #374151;
 }
 
 .password-form-error {

@@ -494,6 +494,18 @@ function submitPasswordReset() {
     } else if (newPassword.length < 8) {
         document.getElementById('newPasswordError').textContent = 'Password must be at least 8 characters.';
         hasError = true;
+    } else if (!/[A-Z]/.test(newPassword)) {
+        document.getElementById('newPasswordError').textContent = 'Password must contain at least one uppercase letter.';
+        hasError = true;
+    } else if (!/[a-z]/.test(newPassword)) {
+        document.getElementById('newPasswordError').textContent = 'Password must contain at least one lowercase letter.';
+        hasError = true;
+    } else if (!/[0-9]/.test(newPassword)) {
+        document.getElementById('newPasswordError').textContent = 'Password must contain at least one number.';
+        hasError = true;
+    } else if (!/[^a-zA-Z0-9]/.test(newPassword)) {
+        document.getElementById('newPasswordError').textContent = 'Password must contain at least one special character.';
+        hasError = true;
     }
     
     if (!confirmPassword) {

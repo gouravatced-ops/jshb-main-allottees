@@ -159,13 +159,19 @@ class AllotteeEmiController extends Controller
      */
     public function processPayment(Request $request, Allottee $allottee)
     {
+        if ($request->has('test_date') && $request->test_date != '') {
+            \Carbon\Carbon::setTestNow($request->test_date);
+        }
+
         $validated = $request->validate([
             'demand_id' => 'required|exists:allottee_emi_demands,id',
             'amount' => 'required|numeric|min:1',
             'payment_mode' => 'required|in:cash,cheque,dd,upi,netbanking,gateway',
-            'transaction_no' => 'required_unless:payment_mode,gateway|string|max:255',
+            'transaction_no' => 'required_unless:payment_mode,gateway|string|max:255|unique:allottee_transactions,transaction_no',
             'utr_no' => 'nullable|string|max:255',
             'receipt_path' => 'required_unless:payment_mode,gateway|file|mimes:jpeg,png,jpg,pdf|max:2048',
+        ], [
+            'transaction_no.unique' => 'This Transaction ID is already used. Duplicate transactions are not allowed.',
         ]);
 
         $receiptPath = null;

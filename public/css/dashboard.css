@@ -17,7 +17,7 @@
     --border: rgba(148, 163, 184, .14);
     --shadow: 0 4px 20px rgba(15, 23, 42, .08);
     --shadow-card: 0 1px 4px rgba(15, 23, 42, .06);
-    --sidebar-width: 300px;
+    --sidebar-width: 250px;
     --header-height: 64px;
     --radius: 14px;
     --radius-sm: 10px;
@@ -1020,11 +1020,11 @@ a {
 .nav-link-custom {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 4px 14px;
+    gap: 10px;
+    padding: 6px 12px;
     border-radius: 0;
     color: #ffffff;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: all .2s ease;
@@ -1047,8 +1047,8 @@ a {
 }
 
 .nav-icon {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 0;
     display: flex;
     align-items: center;
@@ -1070,9 +1070,9 @@ a {
 
 .nav-text {
     flex: 1;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .nav-badge {

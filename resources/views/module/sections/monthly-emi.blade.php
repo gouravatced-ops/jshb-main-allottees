@@ -385,6 +385,9 @@ $emiCalculatorService->refreshPenalty($currentDemand);
             <div class="modal-body p-4">
                 <form id="emiPaymentForm" onsubmit="submitEmiPayment(event)" enctype="multipart/form-data">
                     <input type="hidden" id="modal_demand_id" name="demand_id">
+                    @if (request()->has('test_date'))
+                    <input type="hidden" name="test_date" value="{{ request('test_date') }}">
+                    @endif
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-muted small text-uppercase">Payment Amount (₹)</label>
@@ -395,7 +398,7 @@ $emiCalculatorService->refreshPenalty($currentDemand);
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Payment Mode</label>
+                        <label class="form-label fw-semibold">Payment Mode <span class="text-danger">*</span></label>
                         <select class="form-select form-select-lg" id="modal_payment_mode" name="payment_mode" required onchange="toggleOfflineFields(this.value)">
                             <option value="gateway">Online Payment Gateway</option>
                             <option value="cash">Cash</option>
