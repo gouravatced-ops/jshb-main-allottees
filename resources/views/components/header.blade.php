@@ -101,7 +101,7 @@ $profileInitials = strtoupper(($nameParts[0][0] ?? 'U') . ($nameParts[1][0] ?? '
                         <div class="profile-drop-role">{{ $authUser->email ?? 'no-email@domain.com' }}</div>
                     </div>
                 </div>
-                <a class="profile-drop-item" href="#"><i class="fa-solid fa-file-lines"></i> My Application</a>
+                <a class="profile-drop-item" href="{{ route('dashboard.section', ['blade' => 'application']) }}"><i class="fa-solid fa-file-lines"></i> My Application</a>
                 <a class="profile-drop-item" href="{{ route('dashboard.section', ['blade' => 'notices']) }}"><i class="fa-solid fa-bullhorn"></i> Notices</a>
                 <!-- <a class="profile-drop-item" href="#"><i class="fa-solid fa-id-card"></i> Account Details</a> -->
                 <a class="profile-drop-item" href="javascript:void(0)" onclick="openPasswordResetModal(event); return false;"><i class="fa-solid fa-lock"></i> Change Password</a>

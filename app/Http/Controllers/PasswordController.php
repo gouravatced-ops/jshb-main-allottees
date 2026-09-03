@@ -53,11 +53,21 @@ class PasswordController extends Controller
     {
         $request->validate([
             'old_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[^a-zA-Z0-9]/',
+                'confirmed',
+            ],
             'captcha' => 'required|string',
             'captcha_answer' => 'required|numeric',
         ], [
             'new_password.min' => 'New password must be at least 8 characters.',
+            'new_password.regex' => 'New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
             'new_password.confirmed' => 'Password confirmation does not match.',
             'captcha_answer.required' => 'Please answer the security question.',
         ]);

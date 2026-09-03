@@ -73,14 +73,11 @@
     }
 
     function showToast(type, message) {
-        if (type === 'success' && elements.successToast) {
-            const toast = bootstrap.Toast.getOrCreateInstance(elements.successToast);
-            toast.show();
-        } else if (type === 'error' && elements.errorToast) {
-            const msgSpan = document.getElementById('errorToastMsg');
-            if (msgSpan) msgSpan.textContent = message;
-            const toast = bootstrap.Toast.getOrCreateInstance(elements.errorToast);
-            toast.show();
+        if (typeof window.showToast === 'function') {
+            const title = type === 'success' ? 'Success' : 'Error';
+            window.showToast(title, message, type);
+        } else {
+            alert(type.toUpperCase() + ': ' + message);
         }
     }
 
@@ -396,7 +393,16 @@
             });
 
             const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || 'Payment failed');
+            
+            if (!response.ok) {
+                let errorMsg = result.message || 'Payment failed';
+                if (result.errors) {
+                    errorMsg = Object.values(result.errors).map(errArray => errArray[0]).join('\n');
+                }
+                throw new Error(errorMsg);
+            }
+
+            if (!result.success) throw new Error(result.message || 'Payment failed');
 
             closeEmiModal();
             
