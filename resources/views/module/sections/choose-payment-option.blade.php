@@ -12,6 +12,14 @@
     </div>
 
 
+    {{-- Success Message --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <i class="fa-solid fa-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Payment Options Section --}}
     <div class="payment-plan-wrapper mt-4">
 
@@ -28,7 +36,8 @@
                         value="emi">
 
                     <button type="submit"
-                        class="payment-card payment-card-emi w-100">
+                        class="payment-card payment-card-emi w-100 {{ $allottee->payment_option === 'emi' ? 'border border-2 border-success' : '' }}" 
+                        {{ $allottee->payment_option ? 'disabled' : '' }}>
 
                         <div class="payment-icon">
                             <i class="fa-solid fa-chart-line"></i>
@@ -66,9 +75,13 @@
                                 </li>
                             </ul>
 
-                            <div class="payment-action">
-                                Choose EMI Plan
-                                <i class="fa-solid fa-arrow-right ms-2"></i>
+                            <div class="payment-action {{ $allottee->payment_option === 'emi' ? 'text-success fw-bold' : '' }}">
+                                @if($allottee->payment_option === 'emi')
+                                    <i class="fa-solid fa-check-circle me-2"></i> Selected Option
+                                @else
+                                    Choose EMI Plan
+                                    <i class="fa-solid fa-arrow-right ms-2"></i>
+                                @endif
                             </div>
 
                         </div>
@@ -88,7 +101,8 @@
                         value="one_time">
 
                     <button type="submit"
-                        class="payment-card payment-card-full w-100">
+                        class="payment-card payment-card-full w-100 {{ $allottee->payment_option === 'one_time' ? 'border border-2 border-success' : '' }}"
+                        {{ $allottee->payment_option ? 'disabled' : '' }}>
 
                         <div class="payment-icon">
                             <i class="fa-solid fa-wallet"></i>
@@ -126,9 +140,13 @@
                                 </li>
                             </ul>
 
-                            <div class="payment-action">
-                                Choose One Time Payment
-                                <i class="fa-solid fa-arrow-right ms-2"></i>
+                            <div class="payment-action {{ $allottee->payment_option === 'one_time' ? 'text-success fw-bold' : '' }}">
+                                @if($allottee->payment_option === 'one_time')
+                                    <i class="fa-solid fa-check-circle me-2"></i> Selected Option
+                                @else
+                                    Choose One Time Payment
+                                    <i class="fa-solid fa-arrow-right ms-2"></i>
+                                @endif
                             </div>
 
                         </div>

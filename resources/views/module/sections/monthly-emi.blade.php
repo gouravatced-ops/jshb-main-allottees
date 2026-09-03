@@ -49,12 +49,12 @@ $emiCalculatorService->refreshPenalty($currentDemand);
             <input type="date" id="sim_test_date" class="form-control form-control-sm" style="width: 140px;"
                 value="{{ now()->format('Y-m-d') }}">
             <button class="btn btn-sm btn-warning fw-bold"
-                onclick="App.loadStep({{ $step->step_no }}, document.querySelector('.sidebar-submenu-link.active, .sidebar-link.active'), '?test_date=' + document.getElementById('sim_test_date').value)">
+                onclick="window.location.href = '{{ route('dashboard.section', 'monthly-emi') }}?test_date=' + document.getElementById('sim_test_date').value">
                 Apply simulation
             </button>
             @if (request()->has('test_date'))
             <button class="btn btn-sm btn-outline-secondary"
-                onclick="App.loadStep({{ $step->step_no }}, document.querySelector('.sidebar-submenu-link.active, .sidebar-link.active'))">
+                onclick="window.location.href = '{{ route('dashboard.section', 'monthly-emi') }}'">
                 Reset Date
             </button>
             @endif
@@ -220,7 +220,7 @@ $emiCalculatorService->refreshPenalty($currentDemand);
                 EMI Amount: ₹ {{ number_format($currentDemand->emi_amount, 2) }}
                 @if ($currentDemand->late_fine_penalty > 0 || $currentDemand->penalty_interest_amount > 0)
                 + Penalty: ₹
-                {{ number_format($currentDemand->late_fine_penalty + $currentDemand->penalty_interest_amount, 2) }}
+                {{ number_format($currentDemand->penalty_interest_amount, 2) }} + Penality On Monthly Amount: ₹ {{ number_format($currentDemand->late_fine_penalty, 2) }}
                 @endif
                 @if ($currentDemand->penalty_admin_charges > 0)
                 + Admin: ₹ {{ number_format($currentDemand->penalty_admin_charges, 2) }}
@@ -273,6 +273,7 @@ $emiCalculatorService->refreshPenalty($currentDemand);
 
                     <thead>
                         <tr>
+                            <th>Month</th>
                             <th>EMI</th>
                             <th>Paid Date</th>
                             <th>Amount</th>
@@ -283,7 +284,7 @@ $emiCalculatorService->refreshPenalty($currentDemand);
 
                     <tbody>
 
-                        @forelse(\App\Models\AllotteeTransaction::where(
+                        @forelse(\App\Models\AllotteeTransaction::with('demand')->where(
                         'allottee_id',
                         $allottee->id
                         )
@@ -292,6 +293,9 @@ $emiCalculatorService->refreshPenalty($currentDemand);
                         ->get()
                         as $txn)
                         <tr>
+                            <td>
+                                {{ $txn->demand && $txn->demand->due_date ? \Carbon\Carbon::parse($txn->demand->due_date)->format('M Y') : '—' }}
+                            </td>
 
                             <td>
                                 {{ $txn->transaction_no }}
@@ -303,26 +307,40 @@ $emiCalculatorService->refreshPenalty($currentDemand);
 
                             <td>
                                 ₹ {{ number_format($txn->total_amount, 2) }}
+                                @if($txn->demand && ($txn->demand->late_fine_penalty > 0 || $txn->demand->penalty_interest_amount > 0))
+                                <div style="font-size:10px; color:#ef4444; margin-top:2px;">
+                                    (Inc. Penalty: ₹ {{ number_format($txn->demand->late_fine_penalty + $txn->demand->penalty_interest_amount + $txn->demand->penalty_admin_charges, 2) }})
+                                </div>
+                                @endif
                             </td>
 
                             <td>
                                 <span class="badge bg-success">
                                     Success
                                 </span>
+                                @if($txn->demand && ($txn->demand->late_fine_penalty > 0 || $txn->demand->penalty_interest_amount > 0))
+                                <div class="mt-1">
+                                    <span class="badge bg-danger" style="font-size:10px;">Paid Late</span>
+                                </div>
+                                @endif
                             </td>
 
                             <td>
-
                                 @if ($txn->receipt_path)
-                                <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/')]) }}" target="_blank">
-
-                                    Receipt
-
+                                <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->receipt_path, '/')]) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Payment Receipt">
+                                    <i class="fa-solid fa-file-pdf"></i>
                                 </a>
-                                @else
-                                —
                                 @endif
 
+                                @if ($txn->payment_file_path)
+                                <a href="{{ route('media.document', ['path' => rtrim(config('app.doc_api_url', 'http://localhost/jshb-doc'), '/') . '/' . ltrim($txn->payment_file_path, '/')]) }}" target="_blank" class="btn btn-sm btn-outline-success" title="User Uploaded Receipt">
+                                    <i class="fa-solid fa-file-image"></i>
+                                </a>
+                                @endif
+
+                                @if(!$txn->receipt_path && !$txn->payment_file_path)
+                                —
+                                @endif
                             </td>
 
                         </tr>
@@ -330,7 +348,7 @@ $emiCalculatorService->refreshPenalty($currentDemand);
                         @empty
 
                         <tr>
-                            <td colspan="5" class="text-center">
+                            <td colspan="6" class="text-center">
                                 No EMI payment found.
                             </td>
                         </tr>
@@ -353,3 +371,82 @@ $emiCalculatorService->refreshPenalty($currentDemand);
     @endif
 
 </div>
+
+<!-- EMI Payment Modal -->
+<div class="modal fade" id="emiPaymentModal" tabindex="-1" aria-labelledby="emiPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="emiPaymentModalLabel">
+                    <i class="fas fa-credit-card me-2"></i> Process EMI Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="closeEmiModal()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="emiPaymentForm" onsubmit="submitEmiPayment(event)" enctype="multipart/form-data">
+                    <input type="hidden" id="modal_demand_id" name="demand_id">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-muted small text-uppercase">Payment Amount (₹)</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light">₹</span>
+                            <input type="number" step="0.01" class="form-control fw-bold text-success" id="modal_amount" name="amount" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Payment Mode</label>
+                        <select class="form-select form-select-lg" id="modal_payment_mode" name="payment_mode" required onchange="toggleOfflineFields(this.value)">
+                            <option value="gateway">Online Payment Gateway</option>
+                            <option value="cash">Cash</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="dd">Demand Draft</option>
+                            <option value="upi">UPI</option>
+                            <option value="netbanking">Net Banking</option>
+                        </select>
+                    </div>
+
+                    <div id="offlinePaymentFields" class="d-none bg-light p-3 rounded border mb-4">
+                        <h6 class="fw-bold mb-3 text-secondary"><i class="fas fa-info-circle me-1"></i> Offline Payment Details</h6>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Transaction No / Cheque No <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modal_transaction_no" name="transaction_no" placeholder="Enter Transaction ID">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">UTR No (Optional)</label>
+                            <input type="text" class="form-control" id="modal_utr_no" name="utr_no" placeholder="Enter UTR Number">
+                        </div>
+
+                        <div class="mb-2" id="upiScreenshotField">
+                            <label class="form-label small fw-semibold">Payment Screenshot <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="modal_receipt" name="receipt_path" accept="image/*,.pdf">
+                            <div class="form-text small">Upload UPI screenshot or payment receipt (JPG, PNG, PDF)</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                        <i class="fas fa-lock me-2"></i> Submit Secure Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleOfflineFields(mode) {
+        const offlineFields = document.getElementById('offlinePaymentFields');
+        const transInput = document.getElementById('modal_transaction_no');
+        const receiptInput = document.getElementById('modal_receipt');
+        if (mode === 'gateway') {
+            offlineFields.classList.add('d-none');
+            transInput.required = false;
+            receiptInput.required = false;
+        } else {
+            offlineFields.classList.remove('d-none');
+            transInput.required = true;
+            receiptInput.required = true;
+        }
+    }
+</script>

@@ -104,13 +104,7 @@ class MediaController extends Controller
                         $isAuthorized = true;
                         break;
                     }
-                }
-            }
-
-            if (!$isAuthorized) {
-                $paymentTxns = \App\Models\AllotteePaymentTransaction::where('allottee_id', $allottee->id)->get();
-                foreach ($paymentTxns as $txn) {
-                    if (!empty($txn->receipt_path) && str_contains($path, ltrim($txn->receipt_path, '/'))) {
+                    if (!empty($txn->payment_file_path) && str_contains($path, ltrim($txn->payment_file_path, '/'))) {
                         $isAuthorized = true;
                         break;
                     }
@@ -195,4 +189,3 @@ class MediaController extends Controller
         return response()->file(public_path('img/image-fake.png'));
     }
 }
-

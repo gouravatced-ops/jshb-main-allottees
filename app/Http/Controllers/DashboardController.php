@@ -152,6 +152,10 @@ class DashboardController extends Controller
                 ->get();
         }
 
+        if (!view()->exists('module.sections.' . $blade)) {
+            abort(404);
+        }
+
         return view('module.dashboard', compact('user', 'allottee', 'latestLogin', 'steps', 'blade', 'step', 'pendingApplication', 'applicationStats', 'allApplications', 'notifications'));
     }
 

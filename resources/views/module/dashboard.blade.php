@@ -30,7 +30,7 @@
                 initialPayment: '{{ route('allottee.initial-payment.pay') }}',
                 oneTimePayment: '{{ route('allottee.one-time-payment.pay') }}',
                 uploadSigned: '{{ route('allottee.signed.document.uploads') }}',
-                emiProcessPayment: '{{ isset($allottee) ? route('allottee.emi.process-payment', ['allottee' => $allottee->id]) : '' }}',
+                emiProcessPayment: '{{ isset($allottee) ? route('allottee.emi.process-payment', ['allottee' => encryptId($allottee->id)]) : '' }}',
             },
             currentStepNo: '{{ isset($step) ? $step->step_no : 1 }}'
         };

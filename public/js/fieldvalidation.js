@@ -25,6 +25,21 @@ document.querySelectorAll(".only-hindi").forEach(input => {
     });
 });
 
+document.querySelectorAll('input[type="file"]').forEach(input => {
+
+    input.setAttribute("accept", ".pdf,.png,.jpg,.jpeg");
+
+    input.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (file && !["application/pdf", "image/png", "image/jpeg"].includes(file.type)) {
+            alert("Only PDF, PNG, JPG, and JPEG files are allowed.");
+            this.value = "";
+        }
+    });
+
+});
+
 document.querySelectorAll(".email-validation").forEach(input => {
     input.addEventListener("input", function () {
         const email = this.value.trim();

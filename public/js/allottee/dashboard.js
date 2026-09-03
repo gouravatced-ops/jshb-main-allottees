@@ -383,33 +383,46 @@
         if (btn) btn.disabled = true;
 
         try {
+            const formData = new FormData(form);
+
             const response = await fetch(routes.emiProcessPayment, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 },
-                body: JSON.stringify({
-                    demand_id: demandId,
-                    amount: amount,
-                    payment_mode: paymentMode
-                })
+                body: formData
             });
 
             const result = await response.json();
             if (!response.ok || !result.success) throw new Error(result.message || 'Payment failed');
 
             closeEmiModal();
-            showToast('success', result.message);
+            
+            const overlay = document.createElement('div');
+            overlay.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255,255,255,0.95); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: #28a745; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: dash 0.5s ease-out 0.4s both;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <h2 style="color: #28a745; font-weight: 800; font-family: 'Inter', sans-serif; margin: 0; font-size: 28px; animation: fadeInUp 0.4s ease-out 0.2s both;">Payment Successful!</h2>
+                    <p style="color: #6c757d; margin-top: 12px; font-size: 16px; font-family: 'Inter', sans-serif; animation: fadeInUp 0.4s ease-out 0.3s both;">${result.message}</p>
+                    <style>
+                        @keyframes scaleIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                        @keyframes dash { from { stroke-dasharray: 100; stroke-dashoffset: 100; } to { stroke-dasharray: 100; stroke-dashoffset: 0; } }
+                    </style>
+                </div>
+            `;
+            document.body.appendChild(overlay);
 
-            if (result.account_status === 'closed') {
-                window.location.hash = '#step-12';
+            // Reload after a delay
+            setTimeout(() => {
                 window.location.reload();
-            } else {
-                loadStep(currentStepNo, document.querySelector('.sidebar-submenu-link.active, .sidebar-link.active'));
-            }
+            }, 2500);
         } catch (error) {
             showToast('error', error.message);
         } finally {
@@ -520,10 +533,6 @@
             });
         }
 
-        const emiForm = document.getElementById('emiPaymentForm');
-        if (emiForm) {
-            emiForm.addEventListener('submit', submitEmiPayment);
-        }
     }
 
     window.App = {
@@ -589,6 +598,7 @@
     window.showDummyGateway = showDummyGateway;
     window.openEmiModal = openEmiModal;
     window.closeEmiModal = closeEmiModal;
+    window.submitEmiPayment = submitEmiPayment;
     window.payEmi = payEmi;
     window.prePayment = prePayment;
     window.closeLoan = closeLoan;
@@ -879,7 +889,7 @@
         const formData = new FormData(form);
         const url = form.getAttribute('action');
         const token = form.getAttribute('data-csrf') || document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
 
