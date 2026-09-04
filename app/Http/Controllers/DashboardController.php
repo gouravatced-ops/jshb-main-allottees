@@ -217,18 +217,20 @@ class DashboardController extends Controller
         try {
             \Illuminate\Support\Facades\Log::info("Document Request Upload API Payload: ", $apiPayload);
 
-            $response = \Illuminate\Support\Facades\Http::withToken(env('DOC_API_TOKEN'))
-                ->withHeaders(['X-API-KEY' => env('DOC_API_TOKEN')])
-                ->attach('file', file_get_contents($request->file('document_file')), $request->file('document_file')->getClientOriginalName())
-                ->post(env('DOC_UPLOAD_API_URL'), $apiPayload);
+            $uploadResult = $this->uploadToDocumentApi(
+                $request->file('document_file'),
+                $category,
+                $schemeCode,
+                $propertyNumber,
+                $yyyy,
+                $mm,
+                $dd,
+                null,
+                $apiPayload
+            );
 
-            \Illuminate\Support\Facades\Log::info("Document Request Upload API Response Status: " . $response->status());
-            \Illuminate\Support\Facades\Log::info("Document Request Upload API Response Body: " . $response->body());
-
-            if ($response->successful() && $response->json('status') === 'success') {
-                $responseData = $response->json('data');
-                $receiptPath = ltrim($responseData['file_path'], '/');
-                $receiptFile = basename($receiptPath);
+            $receiptPath = ltrim($uploadResult['file_path'], '/');
+            $receiptFile = $uploadResult['file_name'];
 
                 $allotteeDoc = AllotteeDocument::create([
                     'allottee_id' => $allottee->id,
@@ -274,9 +276,6 @@ class DashboardController extends Controller
                 }
 
                 return back()->with('success', 'Document uploaded successfully.');
-            } else {
-                return back()->with('error', 'Failed to upload document to API: ' . $response->body());
-            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Document Request Upload failed: " . $e->getMessage());
             return back()->with('error', 'Error uploading document: ' . $e->getMessage());
@@ -816,3 +815,4 @@ class DashboardController extends Controller
         return false;
     }
 }
+
