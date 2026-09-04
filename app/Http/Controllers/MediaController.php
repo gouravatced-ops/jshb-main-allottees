@@ -131,7 +131,19 @@ class MediaController extends Controller
             // Priority 1: Direct File System Access (Fastest & Most Secure for Local)
             if (str_starts_with($path, $docApiUrl)) {
                 $relativePath = str_replace($docApiUrl, '', $path);
-                $jshbDocPath = dirname(base_path()) . '/jshb-doc' . $relativePath;
+                // Smartly determine local path based on environment
+                $parentDir = dirname(base_path());
+                $baseDocPath = config('app.doc_api_local_path');
+                
+                if (empty($baseDocPath)) {
+                    if (\Illuminate\Support\Facades\File::isDirectory($parentDir . '/dossier.adms.jshb.computered.co.in')) {
+                        $baseDocPath = $parentDir . '/dossier.adms.jshb.computered.co.in';
+                    } else {
+                        $baseDocPath = $parentDir . '/jshb-doc';
+                    }
+                }
+                
+                $jshbDocPath = rtrim($baseDocPath, '/') . $relativePath;
                 if (\Illuminate\Support\Facades\File::exists($jshbDocPath) && is_file($jshbDocPath)) {
                     return response()->file($jshbDocPath);
                 }
@@ -151,6 +163,8 @@ class MediaController extends Controller
                     ]);
                 }
             } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::build(['driver' => 'single', 'path' => storage_path('logs/doc_fetch.log')])
+                    ->error("HTTP Fetch failed for remote document. Path: {$path} | Error: " . $e->getMessage());
                 // Fetch failed, proceed to fallback
             }
         } else {
@@ -189,3 +203,5 @@ class MediaController extends Controller
         return response()->file(public_path('img/image-fake.png'));
     }
 }
+
+
