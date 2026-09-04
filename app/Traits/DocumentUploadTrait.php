@@ -71,7 +71,7 @@ trait DocumentUploadTrait
             'file'    => $cleanFileName
         ]);
 
-        $response = Http::withToken(env('DOC_API_TOKEN'))
+        $response = Http::withToken(env('DOC_API_TOKEN'))->timeout(60)
             ->withHeaders(['X-API-KEY' => env('DOC_API_TOKEN')])
             ->attach('file', file_get_contents($file), $cleanFileName)
             ->post(env('DOC_UPLOAD_API_URL'), $apiPayload);
@@ -148,7 +148,7 @@ trait DocumentUploadTrait
             'file'    => $cleanFileName
         ]);
 
-        $response = Http::withToken(env('DOC_API_TOKEN'))
+        $response = Http::withToken(env('DOC_API_TOKEN'))->timeout(60)
             ->withHeaders(['X-API-KEY' => env('DOC_API_TOKEN')])
             ->attach('file', $fileContent, $cleanFileName)
             ->post(env('DOC_UPLOAD_API_URL'), $apiPayload);
